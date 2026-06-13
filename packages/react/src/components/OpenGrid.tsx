@@ -14,12 +14,17 @@ export interface OpenGridProps<TData = RowData> extends GridOptions<TData> {
   width?: number | string;
   /** Show inline filter row below header (default: false) */
   showFilterRow?: boolean;
+  /** Render a leading checkbox column (pinned left) with select-all header. */
+  checkboxSelection?: boolean;
 }
+
+const CHECKBOX_FIELD = '__og_select__';
 
 export function OpenGrid<TData = RowData>({
   height = 500,
   width = '100%',
   showFilterRow = false,
+  checkboxSelection = false,
   rowHeight = 40,
   headerHeight = 40,
   ...options
@@ -68,10 +73,27 @@ export function OpenGrid<TData = RowData>({
   // Pinned column groups. `columnDefs` is an intentional dependency so the
   // groups recompute when columns are reordered, pinned, or hidden.
   /* eslint-disable react-hooks/exhaustive-deps */
-  const pinnedLeft = useMemo(() => api.columnModel.getPinnedLeftColumns(), [columnDefs, api.columnModel]);
+  const rawPinnedLeft = useMemo(() => api.columnModel.getPinnedLeftColumns(), [columnDefs, api.columnModel]);
   const pinnedRight = useMemo(() => api.columnModel.getPinnedRightColumns(), [columnDefs, api.columnModel]);
   const centerCols = useMemo(() => api.columnModel.getCenterColumns(), [columnDefs, api.columnModel]);
   /* eslint-enable react-hooks/exhaustive-deps */
+
+  // Synthetic checkbox column lives at the front of the pinned-left pane.
+  const checkboxCol = useMemo<ColumnDef<TData>>(
+    () => ({
+      field: CHECKBOX_FIELD,
+      headerName: '',
+      width: 44,
+      checkboxSelection: true,
+      resizable: false,
+      sortable: false,
+    }),
+    [],
+  );
+  const pinnedLeft = useMemo(
+    () => (checkboxSelection ? [checkboxCol, ...rawPinnedLeft] : rawPinnedLeft),
+    [checkboxSelection, checkboxCol, rawPinnedLeft],
+  );
 
   const pinnedLeftWidth = useMemo(
     () => pinnedLeft.reduce((sum, col) => sum + (columnWidths.get(col.field) ?? col.width ?? 150), 0),
@@ -94,11 +116,32 @@ export function OpenGrid<TData = RowData>({
 
   const handleRowClick = useCallback(
     (node: RowNode<TData>, e: React.MouseEvent) => {
-      const multi = e.shiftKey || e.ctrlKey || e.metaKey;
+      if (e.shiftKey) {
+        api.selectRange(node.id);
+        return;
+      }
+      const multi = e.ctrlKey || e.metaKey;
       api.toggleRow(node.id, multi);
     },
     [api],
   );
+
+  const handleCheckboxChange = useCallback(
+    (node: RowNode<TData>, shiftKey: boolean) => {
+      if (shiftKey) {
+        api.selectRange(node.id);
+      } else {
+        api.toggleRow(node.id, true);
+      }
+    },
+    [api],
+  );
+
+  const handleToggleAll = useCallback(() => api.toggleSelectAll(), [api]);
+
+  // Recomputed each render; `selectedRows` changing drives the re-render.
+  const allSelected = api.isAllSelected();
+  const indeterminate = api.isSelectionIndeterminate();
 
   const handleGroupToggle = useCallback(
     (groupId: string) => {
@@ -148,6 +191,7 @@ export function OpenGrid<TData = RowData>({
           onClick={handleRowClick}
           onGroupToggle={handleGroupToggle}
           columnWidths={columnWidths}
+          onCheckboxChange={handleCheckboxChange}
         />
       );
     });
@@ -166,7 +210,15 @@ export function OpenGrid<TData = RowData>({
             className="og-pinned-left-header"
             style={{ width: pinnedLeftWidth, flexShrink: 0, overflow: 'hidden', zIndex: 2 }}
           >
-            <GridHeader columns={pinnedLeft} sortModel={sortModel} api={api} columnWidths={columnWidths} />
+            <GridHeader
+              columns={pinnedLeft}
+              sortModel={sortModel}
+              api={api}
+              columnWidths={columnWidths}
+              allSelected={allSelected}
+              indeterminate={indeterminate}
+              onToggleAll={handleToggleAll}
+            />
             {showFilterRow && <FilterRow columns={pinnedLeft} api={api} />}
           </div>
         )}

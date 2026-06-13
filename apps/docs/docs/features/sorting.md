@@ -19,9 +19,29 @@ const columns = [
 
 ## User Interaction
 
-- **Click** a sortable header to sort ascending.
-- **Click again** to sort descending.
-- **Shift+click** to add a secondary (tertiary, …) sort column.
+- **Click** a sortable header to cycle its sort: **ascending → descending → none**.
+- **Shift+click** to add a secondary (tertiary, …) sort column; shift-clicking
+  through to "none" removes just that column from the multi-sort.
+
+## Custom Comparators
+
+Provide a `comparator` on a column to control ordering (natural sort, sorting by
+a derived key, etc.). Always compare in ascending order — the engine applies the
+asc/desc direction on top of your result.
+
+```tsx
+const columns = [
+  {
+    field: 'version',
+    sortable: true,
+    comparator: (a, b) =>
+      String(a).localeCompare(String(b), undefined, { numeric: true }),
+  },
+];
+```
+
+The comparator also receives the underlying row nodes (`(a, b, rowA, rowB)`) if
+you need sibling fields.
 
 ## Programmatic API
 
@@ -54,4 +74,7 @@ const current = api.getSortModel();
 
 ## Sort Types
 
-Sorting uses locale-aware string comparison for strings and numeric comparison for numbers. `null`/`undefined` values are sorted to the bottom in ascending order.
+Sorting uses locale-aware string comparison for strings and numeric comparison
+for numbers. `null`, `undefined`, and empty-string values always sort to the
+**end**, regardless of direction. Sorting also recurses into expanded group
+children so nested rows stay ordered.

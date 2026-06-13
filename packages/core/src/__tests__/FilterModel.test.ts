@@ -94,4 +94,82 @@ describe('FilterModel', () => {
     model.setFilter('name', { type: 'text', operator: 'contains', value: 'x' });
     expect(model.getFilters()).toHaveProperty('name');
   });
+
+  it('text notContains and notEqual', () => {
+    model.setFilter('name', { type: 'text', operator: 'notContains', value: 'li' });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Bob']);
+    model.clearFilters();
+    model.setFilter('name', { type: 'text', operator: 'notEqual', value: 'Alice' });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Bob', 'Charlie']);
+  });
+
+  it('text blank / notBlank', () => {
+    const withBlank = makeNodes([
+      { name: '', age: 1, city: 'X', joined: '2020-01-01' },
+      { name: 'Bob', age: 2, city: 'Y', joined: '2020-01-01' },
+    ]);
+    model.setFilter('name', { type: 'text', operator: 'blank' });
+    expect(model.applyFilters(withBlank, cols)).toHaveLength(1);
+    model.clearFilters();
+    model.setFilter('name', { type: 'text', operator: 'notBlank' });
+    expect(model.applyFilters(withBlank, cols).map((n) => n.data.name)).toEqual(['Bob']);
+  });
+
+  it('number >=, <=, notEqual', () => {
+    model.setFilter('age', { type: 'number', operator: 'greaterThanOrEqual', value: 30 });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.age)).toEqual([30, 35]);
+    model.clearFilters();
+    model.setFilter('age', { type: 'number', operator: 'lessThanOrEqual', value: 30 });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.age)).toEqual([30, 25]);
+    model.clearFilters();
+    model.setFilter('age', { type: 'number', operator: 'notEqual', value: 30 });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.age)).toEqual([25, 35]);
+  });
+
+  it('date before/after/between', () => {
+    model.setFilter('joined', { type: 'date', operator: 'after', value: '2020-06-01' });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Charlie']);
+    model.clearFilters();
+    model.setFilter('joined', {
+      type: 'date',
+      operator: 'between',
+      value: '2019-01-01',
+      valueTo: '2020-12-31',
+    });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Alice', 'Bob']);
+  });
+
+  it('custom predicate filter', () => {
+    model.setFilter('age', {
+      type: 'custom',
+      predicate: ({ value }) => typeof value === 'number' && value % 2 === 1,
+    });
+    // 30 even, 25 odd, 35 odd
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.age)).toEqual([25, 35]);
+  });
+
+  it('combines column filters with AND', () => {
+    model.setFilter('city', { type: 'set', operator: 'inSet', value: ['London'] });
+    model.setFilter('age', { type: 'number', operator: 'greaterThan', value: 32 });
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Charlie']);
+  });
+
+  it('quick filter matches across all columns', () => {
+    model.setQuickFilter('paris');
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Bob']);
+    model.setQuickFilter('london');
+    expect(model.applyFilters(nodes, cols)).toHaveLength(2);
+    model.setQuickFilter('');
+    expect(model.applyFilters(nodes, cols)).toHaveLength(3);
+  });
+
+  it('quick filter combines with column filters (AND)', () => {
+    model.setFilter('city', { type: 'set', operator: 'inSet', value: ['London'] });
+    model.setQuickFilter('charlie');
+    expect(model.applyFilters(nodes, cols).map((n) => n.data.name)).toEqual(['Charlie']);
+  });
+
+  it('getUniqueValues returns distinct cell values', () => {
+    expect(model.getUniqueValues(nodes, 'city')).toEqual(['London', 'Paris']);
+  });
 });

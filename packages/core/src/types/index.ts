@@ -29,6 +29,17 @@ export interface ColumnDef<TData = Record<string, unknown>> {
   autoSize?: boolean;
   /** Flex grow factor (like CSS flex) */
   flex?: number;
+  /**
+   * Custom sort comparator. Receives the resolved cell values (after
+   * valueGetter) and the underlying row nodes. Return <0, 0, or >0 like
+   * Array.prototype.sort. Direction (asc/desc) is applied by the engine on top
+   * of the result, so always compare in ascending order here.
+   */
+  comparator?: (a: unknown, b: unknown, rowA: RowNode<TData>, rowB: RowNode<TData>) => number;
+  /** Default filter type used by the inline filter row. Defaults to 'text'. */
+  filterType?: 'text' | 'number' | 'date' | 'set';
+  /** Render a selection checkbox in this column's cells. */
+  checkboxSelection?: boolean;
 }
 
 export interface CellRendererParams<TData = Record<string, unknown>> {
@@ -72,25 +83,46 @@ export interface SortModel {
   sort: 'asc' | 'desc';
 }
 
-export interface FilterCondition {
-  type: 'text' | 'number' | 'date' | 'set';
-  operator:
-    | 'contains'
-    | 'equals'
-    | 'startsWith'
-    | 'endsWith'
-    | 'greaterThan'
-    | 'lessThan'
-    | 'between'
-    | 'inRange'
-    | 'before'
-    | 'after'
-    | 'inSet';
+export type FilterOperator =
+  // text
+  | 'contains'
+  | 'notContains'
+  | 'equals'
+  | 'notEqual'
+  | 'startsWith'
+  | 'endsWith'
+  | 'blank'
+  | 'notBlank'
+  // number
+  | 'greaterThan'
+  | 'greaterThanOrEqual'
+  | 'lessThan'
+  | 'lessThanOrEqual'
+  | 'between'
+  | 'inRange'
+  // date
+  | 'before'
+  | 'after'
+  // set
+  | 'inSet';
+
+export interface CustomFilterParams<TData = RowData> {
   value: unknown;
-  valueTo?: unknown; // used for between/inRange
+  data: TData;
+  condition: FilterCondition<TData>;
 }
 
-export type FilterModel = Record<string, FilterCondition>;
+export interface FilterCondition<TData = RowData> {
+  type: 'text' | 'number' | 'date' | 'set' | 'custom';
+  /** Required for all built-in filter types; ignored for type 'custom'. */
+  operator?: FilterOperator;
+  value?: unknown;
+  valueTo?: unknown; // used for between/inRange
+  /** Predicate for type 'custom'. Return true to keep the row. */
+  predicate?: (params: CustomFilterParams<TData>) => boolean;
+}
+
+export type FilterModel<TData = RowData> = Record<string, FilterCondition<TData>>;
 
 // ─── Column State ────────────────────────────────────────────────────────────
 
@@ -111,8 +143,8 @@ export interface GridApi<TData = RowData> {
   setColumnDefs(defs: ColumnDef<TData>[]): void;
   exportToCsv(params?: { fileName?: string; includeHeaders?: boolean }): string;
   sizeColumnsToFit(viewportWidth: number): void;
-  setFilterModel(model: FilterModel): void;
-  getFilterModel(): FilterModel;
+  setFilterModel(model: FilterModel<TData>): void;
+  getFilterModel(): FilterModel<TData>;
   setSortModel(model: SortModel[]): void;
   getSortModel(): SortModel[];
   showColumn(colId: string): void;
@@ -123,6 +155,14 @@ export interface GridApi<TData = RowData> {
   applyFlexWidths(viewportWidth: number): void;
   resizeColumn(colId: string, width: number): void;
   moveColumn(colId: string, toIndex: number): void;
+  /** Set a global quick-filter string matched across all columns. Empty clears it. */
+  setQuickFilter(text: string): void;
+  getQuickFilter(): string;
+  /** Select every currently visible (post-filter) non-group row. */
+  selectAll(): void;
+  /** Clear the entire selection. */
+  deselectAll(): void;
+  getSelectedCount(): number;
 }
 
 // ─── Grid Options ────────────────────────────────────────────────────────────
@@ -139,7 +179,7 @@ export interface GridOptions<TData = RowData> {
   selection?: 'single' | 'multiple' | 'range' | false;
   onSelectionChanged?: (event: SelectionChangedEvent<TData>) => void;
   onSortChanged?: (model: SortModel[]) => void;
-  onFilterChanged?: (model: FilterModel) => void;
+  onFilterChanged?: (model: FilterModel<TData>) => void;
   onColumnResized?: (colId: string, width: number) => void;
   onColumnMoved?: (colId: string, toIndex: number) => void;
   onGridReady?: (event: GridReadyEvent<TData>) => void;

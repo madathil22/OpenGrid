@@ -78,6 +78,7 @@ export default function App() {
   const [showFilterRow, setShowFilterRow] = useState(false);
   const [rowCount, setRowCount] = useState(10000);
   const [variableHeight, setVariableHeight] = useState(false);
+  const [quickFilter, setQuickFilter] = useState('');
   const apiRef = useRef<GridApi<EmployeeRow> | null>(null);
 
   const handleGridReady = (api: GridApi<EmployeeRow>) => {
@@ -93,6 +94,11 @@ export default function App() {
 
   const handleSizeToFit = () => {
     apiRef.current?.sizeColumnsToFit(window.innerWidth - 40);
+  };
+
+  const handleQuickFilter = (text: string) => {
+    setQuickFilter(text);
+    apiRef.current?.setQuickFilter(text);
   };
 
   const gridOptions: GridOptions<EmployeeRow> = {
@@ -122,11 +128,18 @@ export default function App() {
       <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 700 }}>OpenGrid Playground</h1>
       <p style={{ margin: '0 0 20px', opacity: 0.7, fontSize: 14 }}>
         Showing {rowCount.toLocaleString()} rows — virtual scrolling, pinned columns (ID/Name left, Active right),
-        sorting, filtering, selection{variableHeight ? ', variable row heights' : ''}
+        checkbox selection, quick filter, multi-sort, filtering{variableHeight ? ', variable row heights' : ''}
       </p>
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          type="search"
+          placeholder="Quick filter…"
+          value={quickFilter}
+          onChange={(e) => handleQuickFilter(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.2)', minWidth: 200 }}
+        />
         <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
           {theme === 'light' ? 'Dark' : 'Light'} Theme
         </button>
@@ -156,11 +169,14 @@ export default function App() {
           height={600}
           width="100%"
           showFilterRow={showFilterRow}
+          checkboxSelection
         />
       </div>
 
       <p style={{ marginTop: 16, fontSize: 12, opacity: 0.5 }}>
-        Tip: Click column headers to sort (Shift+click for multi-sort). Drag headers to reorder. Drag the resize handle to resize columns.
+        Tip: Click headers to sort (cycles asc → desc → none; Shift+click for multi-sort). Use the checkboxes to
+        select rows (Shift+click a checkbox or row for range select; header checkbox selects all). Drag headers to
+        reorder, drag the resize handle to resize.
       </p>
 
       <style>{`
@@ -221,6 +237,8 @@ export default function App() {
         .og-header-cell:hover .og-resize-handle { opacity: 1; }
         .og-resize-handle:hover { background: #4285f4; opacity: 1; }
         .og-body { position: relative; overflow: auto; }
+        .og-checkbox-cell { display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+        .og-checkbox-cell input { cursor: pointer; width: 16px; height: 16px; }
         .og-pinned-left-header, .og-pinned-left-body { box-shadow: 2px 0 4px rgba(0,0,0,0.08); background: #fff; }
         .og-pinned-right-header, .og-pinned-right-body { box-shadow: -2px 0 4px rgba(0,0,0,0.08); background: #fff; }
         .og-pinned-left-header, .og-pinned-right-header { background: #f8f9fa; }

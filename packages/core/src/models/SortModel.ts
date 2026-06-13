@@ -56,29 +56,50 @@ export class SortModel<TData = RowData> {
     if (this.sorts.length === 0) return rows;
 
     const sortedEntries = this.getSorts();
+    const colById = new Map(columns.map((c) => [c.field, c]));
 
-    return [...rows].sort((a, b) => {
-      for (const entry of sortedEntries) {
-        const col = columns.find((c) => c.field === entry.colId);
-        if (!col) continue;
+    const sortLevel = (nodes: RowNode<TData>[]): RowNode<TData>[] => {
+      const sorted = [...nodes].sort((a, b) => {
+        for (const entry of sortedEntries) {
+          const col = colById.get(entry.colId);
+          if (!col) continue;
 
-        let aVal: unknown;
-        let bVal: unknown;
+          let aVal: unknown;
+          let bVal: unknown;
 
-        if (col.valueGetter) {
-          aVal = col.valueGetter({ data: a.data, colDef: col });
-          bVal = col.valueGetter({ data: b.data, colDef: col });
-        } else {
-          aVal = getFieldValue(a.data, entry.colId);
-          bVal = getFieldValue(b.data, entry.colId);
+          if (col.valueGetter) {
+            aVal = col.valueGetter({ data: a.data, colDef: col });
+            bVal = col.valueGetter({ data: b.data, colDef: col });
+          } else {
+            aVal = getFieldValue(a.data, entry.colId);
+            bVal = getFieldValue(b.data, entry.colId);
+          }
+
+          // Nulls/blanks always sort to the end, regardless of direction.
+          const aNull = aVal == null || aVal === '';
+          const bNull = bVal == null || bVal === '';
+          if (aNull && bNull) continue;
+          if (aNull) return 1;
+          if (bNull) return -1;
+
+          const cmp = col.comparator
+            ? col.comparator(aVal, bVal, a, b)
+            : compareValues(aVal, bVal);
+          if (cmp !== 0) {
+            return entry.sort === 'asc' ? cmp : -cmp;
+          }
         }
+        return 0;
+      });
 
-        const cmp = compareValues(aVal, bVal);
-        if (cmp !== 0) {
-          return entry.sort === 'asc' ? cmp : -cmp;
-        }
-      }
-      return 0;
-    });
+      // Recurse into group children so nested rows stay ordered too.
+      return sorted.map((node) =>
+        node.isGroup && node.children && node.children.length > 0
+          ? { ...node, children: sortLevel(node.children) }
+          : node,
+      );
+    };
+
+    return sortLevel(rows);
   }
 }

@@ -85,4 +85,47 @@ describe('SelectionModel', () => {
     model.selectRow('row-0');
     expect(model.getSelectedIds()).toHaveLength(0);
   });
+
+  it('selectRange selects a contiguous block by anchor/target', () => {
+    const ids = nodes.map((n) => n.id);
+    model.selectRange(ids, 'row-1', 'row-3');
+    expect(model.getSelectedIds().sort()).toEqual(['row-1', 'row-2', 'row-3']);
+  });
+
+  it('getSelectedCount reflects selection size', () => {
+    model.selectRow('row-0');
+    model.selectRow('row-1', true);
+    expect(model.getSelectedCount()).toBe(2);
+  });
+
+  it('isAllSelected / isIndeterminate over a set', () => {
+    const ids = nodes.map((n) => n.id);
+    expect(model.isAllSelected(ids)).toBe(false);
+    model.selectRow('row-0', true);
+    expect(model.isIndeterminate(ids)).toBe(true);
+    expect(model.isAllSelected(ids)).toBe(false);
+    model.selectAll(ids);
+    expect(model.isAllSelected(ids)).toBe(true);
+    expect(model.isIndeterminate(ids)).toBe(false);
+  });
+
+  it('toggleAll selects then deselects the whole set', () => {
+    const ids = nodes.map((n) => n.id);
+    model.toggleAll(ids);
+    expect(model.isAllSelected(ids)).toBe(true);
+    model.toggleAll(ids);
+    expect(model.getSelectedCount()).toBe(0);
+  });
+
+  it('toggleAll is a no-op in single mode', () => {
+    model.setMode('single');
+    model.toggleAll(nodes.map((n) => n.id));
+    expect(model.getSelectedCount()).toBe(0);
+  });
+
+  it('deselectAll clears everything', () => {
+    model.selectAll(nodes.map((n) => n.id));
+    model.deselectAll();
+    expect(model.getSelectedCount()).toBe(0);
+  });
 });

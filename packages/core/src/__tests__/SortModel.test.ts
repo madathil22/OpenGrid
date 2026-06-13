@@ -76,4 +76,69 @@ describe('SortModel', () => {
     model.applySorting(nodes, cols);
     expect(nodes.map((n) => n.data.name)).toEqual(original);
   });
+
+  it('multi-column sort respects sortIndex order', () => {
+    model.addSort('age', 'asc');
+    model.addSort('name', 'asc');
+    const nodes = makeNodes([
+      { name: 'Bob', age: 30 },
+      { name: 'Alice', age: 30 },
+      { name: 'Carol', age: 20 },
+    ]);
+    const sorted = model.applySorting(nodes, cols);
+    // primary: age asc → 20 first; secondary: name asc within age 30
+    expect(sorted.map((n) => `${n.data.age}-${n.data.name}`)).toEqual([
+      '20-Carol',
+      '30-Alice',
+      '30-Bob',
+    ]);
+  });
+
+  it('sorts nulls/blanks to the end regardless of direction', () => {
+    const nodes = makeNodes([
+      { name: 'Bob', age: 2 },
+      { name: '', age: 1 },
+      { name: 'Alice', age: 3 },
+    ]);
+    model.addSort('name', 'asc');
+    expect(model.applySorting(nodes, cols).map((n) => n.data.name)).toEqual(['Alice', 'Bob', '']);
+    model.clearSorts();
+    model.addSort('name', 'desc');
+    expect(model.applySorting(nodes, cols).map((n) => n.data.name)).toEqual(['Bob', 'Alice', '']);
+  });
+
+  it('uses a custom comparator when provided', () => {
+    // Sort by name length instead of lexicographically
+    const lenCols: ColumnDef<Row>[] = [
+      { field: 'name', comparator: (a, b) => String(a).length - String(b).length },
+      { field: 'age' },
+    ];
+    model.addSort('name', 'asc');
+    const nodes = makeNodes([
+      { name: 'aaaa', age: 1 },
+      { name: 'a', age: 2 },
+      { name: 'aa', age: 3 },
+    ]);
+    const sorted = model.applySorting(nodes, lenCols);
+    expect(sorted.map((n) => n.data.name)).toEqual(['a', 'aa', 'aaaa']);
+  });
+
+  it('sorts within expanded group children', () => {
+    const groupNode: RowNode<Row> = {
+      id: 'g-0',
+      data: {} as Row,
+      rowIndex: 0,
+      level: 0,
+      expanded: true,
+      isGroup: true,
+      groupKey: 'g',
+      children: makeNodes([
+        { name: 'Charlie', age: 3 },
+        { name: 'Alice', age: 1 },
+      ]),
+    };
+    model.addSort('name', 'asc');
+    const [sortedGroup] = model.applySorting([groupNode], cols);
+    expect(sortedGroup?.children?.map((c) => c.data.name)).toEqual(['Alice', 'Charlie']);
+  });
 });

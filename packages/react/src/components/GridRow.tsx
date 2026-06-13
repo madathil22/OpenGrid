@@ -13,6 +13,8 @@ export interface GridRowProps<TData = RowData> {
   onGroupToggle: (groupId: string) => void;
   /** Map from colId → effective width */
   columnWidths?: Map<string, number>;
+  /** Toggle this row's selection from a checkbox cell (shiftKey → range). */
+  onCheckboxChange?: (node: RowNode<TData>, shiftKey: boolean) => void;
 }
 
 export function GridRow<TData = RowData>({
@@ -24,6 +26,7 @@ export function GridRow<TData = RowData>({
   onClick,
   onGroupToggle,
   columnWidths,
+  onCheckboxChange,
 }: GridRowProps<TData>) {
   const style: React.CSSProperties = {
     position: 'absolute',
@@ -53,14 +56,35 @@ export function GridRow<TData = RowData>({
         }
       }}
     >
-      {columns.map((col) => (
-        <GridCell
-          key={col.field}
-          column={col}
-          node={node}
-          effectiveWidth={columnWidths?.get(col.field)}
-        />
-      ))}
+      {columns.map((col) =>
+        col.checkboxSelection ? (
+          <div
+            key={col.field}
+            className="og-cell og-checkbox-cell"
+            style={{ width: columnWidths?.get(col.field) ?? col.width ?? 44 }}
+            role="gridcell"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCheckboxChange?.(node, e.shiftKey);
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              readOnly
+              tabIndex={-1}
+              aria-label="Select row"
+            />
+          </div>
+        ) : (
+          <GridCell
+            key={col.field}
+            column={col}
+            node={node}
+            effectiveWidth={columnWidths?.get(col.field)}
+          />
+        ),
+      )}
     </div>
   );
 }

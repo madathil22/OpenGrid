@@ -7,9 +7,21 @@ export interface GridHeaderProps<TData = RowData> {
   api: GridController<TData>;
   /** Map from colId → effective width */
   columnWidths?: Map<string, number>;
+  /** Select-all checkbox state (for a checkboxSelection column). */
+  allSelected?: boolean;
+  indeterminate?: boolean;
+  onToggleAll?: () => void;
 }
 
-export function GridHeader<TData = RowData>({ columns, sortModel, api, columnWidths }: GridHeaderProps<TData>) {
+export function GridHeader<TData = RowData>({
+  columns,
+  sortModel,
+  api,
+  columnWidths,
+  allSelected = false,
+  indeterminate = false,
+  onToggleAll,
+}: GridHeaderProps<TData>) {
   const dragSourceRef = useRef<string | null>(null);
 
   const getSortDirection = (colId: string): 'asc' | 'desc' | null => {
@@ -21,18 +33,21 @@ export function GridHeader<TData = RowData>({ columns, sortModel, api, columnWid
     (col: ColumnDef<TData>, e: React.MouseEvent) => {
       if (!col.sortable) return;
       const current = getSortDirection(col.field);
-      const next: 'asc' | 'desc' = current === 'asc' ? 'desc' : 'asc';
+      // Tri-state cycle: none → asc → desc → none.
+      const next: 'asc' | 'desc' | null =
+        current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc';
       const multi = e.shiftKey;
       if (multi) {
-        const currentModel = api.getSortModel();
-        const existing = currentModel.find((s) => s.colId === col.field);
-        if (existing) {
-          api.setSortModel(currentModel.map((s) => (s.colId === col.field ? { ...s, sort: next } : s)));
-        } else {
+        const currentModel = api.getSortModel().filter((s) => s.colId !== col.field);
+        if (next) {
           api.setSortModel([...currentModel, { colId: col.field, sort: next }]);
+        } else {
+          api.setSortModel(currentModel);
         }
-      } else {
+      } else if (next) {
         api.setSortModel([{ colId: col.field, sort: next }]);
+      } else {
+        api.setSortModel([]);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,6 +95,31 @@ export function GridHeader<TData = RowData>({ columns, sortModel, api, columnWid
   return (
     <div className="og-header" role="row">
       {columns.map((col) => {
+        if (col.checkboxSelection) {
+          return (
+            <div
+              key={col.field}
+              className="og-header-cell og-checkbox-cell"
+              style={{ width: columnWidths?.get(col.field) ?? col.width ?? 44 }}
+              role="columnheader"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleAll?.();
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={allSelected}
+                readOnly
+                tabIndex={-1}
+                aria-label="Select all rows"
+                ref={(el) => {
+                  if (el) el.indeterminate = indeterminate;
+                }}
+              />
+            </div>
+          );
+        }
         const sort = getSortDirection(col.field);
         return (
           <div

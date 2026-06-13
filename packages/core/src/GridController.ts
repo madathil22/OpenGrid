@@ -71,7 +71,9 @@ export class GridController<TData = RowData> implements GridApi<TData> {
   // ── Internal recompute ──────────────────────────────────────────────────────
 
   private _recompute(): void {
-    let nodes = this.dataModel.getRowNodes();
+    // Always start from the canonical, unfiltered node list so that relaxing a
+    // filter restores previously hidden rows.
+    let nodes = this.dataModel.getAllRowNodes();
     const columns = this.columnModel.getColumns();
 
     // Apply filters
@@ -129,7 +131,7 @@ export class GridController<TData = RowData> implements GridApi<TData> {
     this._notify();
   }
 
-  setFilterModel(model: FilterModelType): void {
+  setFilterModel(model: FilterModelType<TData>): void {
     this.filterModel.clearFilters();
     for (const [colId, condition] of Object.entries(model)) {
       this.filterModel.setFilter(colId, condition);
@@ -141,7 +143,7 @@ export class GridController<TData = RowData> implements GridApi<TData> {
     }
   }
 
-  getFilterModel(): FilterModelType {
+  getFilterModel(): FilterModelType<TData> {
     return this.filterModel.getFilters();
   }
 
@@ -196,6 +198,77 @@ export class GridController<TData = RowData> implements GridApi<TData> {
     if (this.options.onSelectionChanged) {
       this.options.onSelectionChanged({ selectedRows: this.getSelectedRows() });
     }
+  }
+
+  /** Ids of all currently visible (post-filter) non-group rows. */
+  private _visibleSelectableIds(): string[] {
+    return this.dataModel
+      .getRowNodes()
+      .filter((node) => !node.isGroup)
+      .map((node) => node.id);
+  }
+
+  private _emitSelectionChanged(): void {
+    if (this.options.onSelectionChanged) {
+      this.options.onSelectionChanged({ selectedRows: this.getSelectedRows() });
+    }
+  }
+
+  /** Select a contiguous range from the last-selected anchor to the target row. */
+  selectRange(targetId: string): void {
+    const ids = this._visibleSelectableIds();
+    const anchor = this.selectionModel.getLastSelectedId();
+    if (anchor == null) {
+      this.selectionModel.selectRow(targetId, false);
+    } else {
+      this.selectionModel.selectRange(ids, anchor, targetId);
+    }
+    this._notify();
+    this._emitSelectionChanged();
+  }
+
+  selectAll(): void {
+    this.selectionModel.selectAll(this._visibleSelectableIds());
+    this._notify();
+    this._emitSelectionChanged();
+  }
+
+  deselectAll(): void {
+    this.selectionModel.deselectAll();
+    this._notify();
+    this._emitSelectionChanged();
+  }
+
+  /** Toggle select-all over the currently visible rows (for header checkbox). */
+  toggleSelectAll(): void {
+    this.selectionModel.toggleAll(this._visibleSelectableIds());
+    this._notify();
+    this._emitSelectionChanged();
+  }
+
+  isAllSelected(): boolean {
+    return this.selectionModel.isAllSelected(this._visibleSelectableIds());
+  }
+
+  isSelectionIndeterminate(): boolean {
+    return this.selectionModel.isIndeterminate(this._visibleSelectableIds());
+  }
+
+  getSelectedCount(): number {
+    return this.selectionModel.getSelectedCount();
+  }
+
+  setQuickFilter(text: string): void {
+    this.filterModel.setQuickFilter(text);
+    this._recompute();
+    this._notify();
+    if (this.options.onFilterChanged) {
+      this.options.onFilterChanged(this.getFilterModel());
+    }
+  }
+
+  getQuickFilter(): string {
+    return this.filterModel.getQuickFilter();
   }
 
   toggleGroupExpand(groupId: string): void {

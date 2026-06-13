@@ -84,8 +84,10 @@ pnpm lint
 |---|---|---|
 | `field` | `field` | same |
 | `headerName` | `headerName` | same |
-| `sortable` | `sortable` | same |
+| `sortable` | `sortable` | same; header click cycles asc → desc → none |
+| `comparator` | `comparator` | `(a, b, rowA, rowB) => number`, compare ascending |
 | `filter: true \| 'agTextColumnFilter'` | `filterable: true` | filter type is inferred from `FilterCondition.type` |
+| `checkboxSelection` (colDef) | `<OpenGrid checkboxSelection />` (grid prop) | renders a pinned-left checkbox column + select-all header |
 | `width` / `minWidth` / `maxWidth` | `width` / `minWidth` / `maxWidth` | same |
 | `flex` | `flex` | call `api.applyFlexWidths(viewportWidth)` to apply |
 | `pinned: 'left' \| 'right'` | `pinned: 'left' \| 'right'` | same |
@@ -104,6 +106,8 @@ pnpm lint
 | `api.exportDataAsCsv(params)` | `api.exportToCsv({ fileName?, includeHeaders? })` |
 | `api.sizeColumnsToFit()` | `api.sizeColumnsToFit(viewportWidth)` |
 | `api.setFilterModel(m)` / `getFilterModel()` | `api.setFilterModel(m)` / `getFilterModel()` |
+| `api.setQuickFilter(text)` | `api.setQuickFilter(text)` / `getQuickFilter()` |
+| `api.selectAll()` / `deselectAll()` | `api.selectAll()` / `deselectAll()` / `getSelectedCount()` |
 | `api.setSortModel(m)` (legacy) | `api.setSortModel(m)` / `getSortModel()` |
 | `api.getColumnState()` / `applyColumnState()` | `api.getColumnState()` / `setColumnState()` |
 | `api.setGridOption('rowData', d)` | `api.setRowData(d)` |
@@ -116,11 +120,12 @@ OpenGrid is built in milestones. As of now, treat anything not listed as **prese
 as **not yet available**, and tell the user rather than inventing an API.
 
 - **Present:** virtual row + column scrolling, fixed/variable row height, pinned
-  columns, flex/auto-size, sort (multi), text/number/date/set filters, single/multi
-  selection, client-side row grouping + aggregations, CSV export, Excel export,
-  light/dark themes.
-- **Planned / partial (check the milestone before relying on it):** range selection,
-  master/detail rows, full column-state persistence, pagination UI.
+  columns, flex/auto-size, multi-column sort with custom comparators (tri-state
+  toggle, nulls-last), text/number/date/set/custom filters + global quick filter,
+  single/multiple/row-range selection with checkbox column + select-all, client-side
+  row grouping + aggregations, CSV export, Excel export, light/dark themes.
+- **Planned / partial (check the milestone before relying on it):** cell-range
+  selection, master/detail rows, full column-state persistence, pagination UI.
 - **Out of scope (AG Grid enterprise features OpenGrid does NOT aim to replicate):**
   pivoting, integrated charts, server-side/viewport row models, tree data, cell
   editing framework, the AG Grid theming class names.

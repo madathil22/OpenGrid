@@ -22,16 +22,27 @@ interface GridApi<TData> {
   sizeColumnsToFit(viewportWidth: number): void;
 
   // Filtering
-  setFilterModel(model: FilterModel): void;
-  getFilterModel(): FilterModel;
+  setFilterModel(model: FilterModel<TData>): void;
+  getFilterModel(): FilterModel<TData>;
+  setQuickFilter(text: string): void;   // global substring match across all columns
+  getQuickFilter(): string;
 
   // Sorting
   setSortModel(model: SortModel[]): void;
   getSortModel(): SortModel[];
 
-  // Column visibility
+  // Selection
+  selectAll(): void;                     // select all visible (post-filter) rows
+  deselectAll(): void;
+  getSelectedCount(): number;
+
+  // Column visibility / layout
   showColumn(colId: string): void;
   hideColumn(colId: string): void;
+  resizeColumn(colId: string, width: number): void;
+  moveColumn(colId: string, toIndex: number): void;
+  autoSizeColumn(colId: string, measuredWidth: number): void;
+  applyFlexWidths(viewportWidth: number): void;
 
   // Column state
   getColumnState(): ColumnState[];

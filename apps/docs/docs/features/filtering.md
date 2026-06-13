@@ -4,7 +4,8 @@ sidebar_position: 2
 
 # Filtering
 
-OpenGrid supports text, number, date, and set filters.
+OpenGrid supports text, number, date, set, and custom filters, plus a global
+quick filter. Column filters combine with **AND**.
 
 ## Enabling the Filter Row
 
@@ -18,14 +19,17 @@ The filter row renders below the header. Text-filterable columns get an input bo
 
 ```typescript
 interface FilterCondition {
-  type: 'text' | 'number' | 'date' | 'set';
-  operator:
-    | 'contains' | 'equals' | 'startsWith' | 'endsWith'  // text
-    | 'greaterThan' | 'lessThan' | 'between' | 'inRange'  // number
-    | 'before' | 'after'                                   // date
-    | 'inSet';                                             // set
-  value: unknown;
-  valueTo?: unknown; // for between/inRange
+  type: 'text' | 'number' | 'date' | 'set' | 'custom';
+  operator?:
+    | 'contains' | 'notContains' | 'equals' | 'notEqual'
+    | 'startsWith' | 'endsWith' | 'blank' | 'notBlank'      // text
+    | 'greaterThan' | 'greaterThanOrEqual'
+    | 'lessThan' | 'lessThanOrEqual' | 'between' | 'inRange' // number
+    | 'before' | 'after'                                     // date
+    | 'inSet';                                               // set
+  value?: unknown;
+  valueTo?: unknown;                  // for between/inRange
+  predicate?: (params: { value: unknown; data: TData; condition: FilterCondition }) => boolean; // for type 'custom'
 }
 ```
 
@@ -55,6 +59,34 @@ api.setFilterModel({
     value: ['Engineering', 'Design'],
   },
 });
+
+// Build the option list from the data:
+const departments = api.filterModel.getUniqueValues(api.getVisibleRows(), 'department');
+```
+
+## Custom Filter
+
+For logic the built-in operators don't cover, use `type: 'custom'` with a
+`predicate`. Return `true` to keep the row.
+
+```typescript
+api.setFilterModel({
+  email: {
+    type: 'custom',
+    predicate: ({ value }) => String(value).endsWith('@ubs.com'),
+  },
+});
+```
+
+## Quick Filter
+
+A global, case-insensitive substring match across **all** columns. It combines
+with column filters using AND.
+
+```typescript
+api.setQuickFilter('london');  // keep rows where any column contains "london"
+api.setQuickFilter('');        // clear
+const text = api.getQuickFilter();
 ```
 
 ## onChange Callback

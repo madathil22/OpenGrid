@@ -92,4 +92,44 @@ describe('GridController', () => {
     ctrl.setRowData([...rowData]);
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it('setQuickFilter narrows rows across all columns', () => {
+    const ctrl = new GridController({ columnDefs: columns, rowData });
+    ctrl.setQuickFilter('marketing');
+    expect(ctrl.getVisibleRows().map((r) => r.data.name)).toEqual(['Bob']);
+    expect(ctrl.getQuickFilter()).toBe('marketing');
+    ctrl.setQuickFilter('');
+    expect(ctrl.getVisibleRows()).toHaveLength(3);
+  });
+
+  it('selectAll / deselectAll / getSelectedCount operate on visible rows', () => {
+    const ctrl = new GridController({ columnDefs: columns, rowData });
+    ctrl.selectAll();
+    expect(ctrl.getSelectedCount()).toBe(3);
+    expect(ctrl.isAllSelected()).toBe(true);
+    ctrl.deselectAll();
+    expect(ctrl.getSelectedCount()).toBe(0);
+  });
+
+  it('selectAll respects active filters', () => {
+    const ctrl = new GridController({ columnDefs: columns, rowData });
+    ctrl.setFilterModel({ dept: { type: 'set', operator: 'inSet', value: ['Engineering'] } });
+    ctrl.selectAll();
+    expect(ctrl.getSelectedCount()).toBe(2);
+  });
+
+  it('selectRange selects a contiguous block from the anchor', () => {
+    const ctrl = new GridController({ columnDefs: columns, rowData });
+    ctrl.selectRow('row-0');
+    ctrl.selectRange('row-2');
+    expect(ctrl.getSelectedCount()).toBe(3);
+  });
+
+  it('toggleSelectAll flips between all and none', () => {
+    const ctrl = new GridController({ columnDefs: columns, rowData });
+    ctrl.toggleSelectAll();
+    expect(ctrl.isAllSelected()).toBe(true);
+    ctrl.toggleSelectAll();
+    expect(ctrl.getSelectedCount()).toBe(0);
+  });
 });

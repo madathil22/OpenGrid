@@ -80,4 +80,39 @@ export class SelectionModel<TData = RowData> {
       .filter((node) => this.selectedIds.has(node.id))
       .map((node) => node.data);
   }
+
+  getSelectedCount(): number {
+    return this.selectedIds.size;
+  }
+
+  /** Clear all selection. Alias of {@link clearSelection} for API symmetry. */
+  deselectAll(): void {
+    this.clearSelection();
+  }
+
+  /** True when every id in the given set is selected (and the set is non-empty). */
+  isAllSelected(ids: string[]): boolean {
+    if (ids.length === 0) return false;
+    return ids.every((id) => this.selectedIds.has(id));
+  }
+
+  /** True when some, but not all, of the given ids are selected. */
+  isIndeterminate(ids: string[]): boolean {
+    if (ids.length === 0) return false;
+    const selectedInSet = ids.filter((id) => this.selectedIds.has(id)).length;
+    return selectedInSet > 0 && selectedInSet < ids.length;
+  }
+
+  /**
+   * Toggle the whole set: if all are currently selected, deselect them;
+   * otherwise select them all. No-op in 'single' or disabled modes.
+   */
+  toggleAll(ids: string[]): void {
+    if (this.mode === false || this.mode === 'single') return;
+    if (this.isAllSelected(ids)) {
+      for (const id of ids) this.selectedIds.delete(id);
+    } else {
+      for (const id of ids) this.selectedIds.add(id);
+    }
+  }
 }

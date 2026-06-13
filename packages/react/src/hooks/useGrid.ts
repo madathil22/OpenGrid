@@ -14,7 +14,7 @@ export interface UseGridReturn<TData> {
   columnDefs: ColumnDef<TData>[];
   visibleRows: RowNode<TData>[];
   sortModel: SortModel[];
-  filterModel: FilterModel;
+  filterModel: FilterModel<TData>;
   selectedRows: TData[];
 }
 
@@ -35,7 +35,7 @@ export function useGrid<TData = RowData>(options: GridOptions<TData>): UseGridRe
     () => api.getVisibleRows(),
   );
   const [sortModel, setSortModel] = useState<SortModel[]>(() => api.getSortModel());
-  const [filterModel, setFilterModel] = useState<FilterModel>(() => api.getFilterModel());
+  const [filterModel, setFilterModel] = useState<FilterModel<TData>>(() => api.getFilterModel());
   const [selectedRows, setSelectedRows] = useState<TData[]>(() => api.getSelectedRows());
 
   const syncState = useCallback(() => {
