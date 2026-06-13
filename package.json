@@ -2,6 +2,7 @@
   "name": "opengrid-monorepo",
   "version": "0.0.1",
   "private": true,
+  "license": "MIT",
   "description": "OpenGrid — open-source enterprise data grid",
   "scripts": {
     "build": "pnpm -r --filter='./packages/*' build",

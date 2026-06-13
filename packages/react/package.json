@@ -1,6 +1,7 @@
 {
   "name": "@opengrid/react",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "React 19 wrapper for OpenGrid",
   "type": "module",
   "main": "./dist/index.cjs",

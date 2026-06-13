@@ -1,6 +1,7 @@
 {
   "name": "@opengrid/themes",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "CSS variable-based themes for OpenGrid",
   "type": "module",
   "main": "./dist/index.js",

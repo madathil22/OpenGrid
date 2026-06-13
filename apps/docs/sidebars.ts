@@ -6,6 +6,11 @@ const sidebars: SidebarsConfig = {
     'installation',
     {
       type: 'category',
+      label: 'Migration',
+      items: ['migration/from-ag-grid'],
+    },
+    {
+      type: 'category',
       label: 'API Reference',
       items: ['api/column-defs', 'api/grid-options', 'api/grid-api'],
     },

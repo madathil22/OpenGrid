@@ -52,3 +52,20 @@ pnpm install
 pnpm build
 pnpm test
 ```
+
+## Migrating from AG Grid
+
+OpenGrid mirrors AG Grid's `rowData` / `columnDefs` / grid-`api` model, so most
+migrations are mechanical renames (`filter` → `filterable`, `rowSelection` →
+`selection`, `exportDataAsCsv` → `exportToCsv`, …). See the
+[migration guide](https://madathil22.github.io/OpenGrid/docs/migration/from-ag-grid).
+
+**Using an AI coding agent to do the migration?** Point it at
+[`AGENTS.md`](./AGENTS.md) — it contains the full API mapping, a step-by-step
+migration recipe, and an honest feature-parity matrix written for agent consumption.
+
+## License
+
+[MIT](./LICENSE) © OpenGrid contributors. Free for any use, commercial or
+otherwise, including in proprietary and enterprise applications — no fees, no
+feature gates, no contributor license agreement required.
