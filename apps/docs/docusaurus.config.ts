@@ -18,6 +18,8 @@ const config: Config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  // Enables editable, runnable ```jsx live code blocks (react-live).
+  themes: ['@docusaurus/theme-live-codeblock'],
   presets: [
     [
       'classic',

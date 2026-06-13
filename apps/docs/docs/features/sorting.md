@@ -6,6 +6,15 @@ sidebar_position: 1
 
 OpenGrid supports multi-column sorting out of the box.
 
+## Try it out
+
+Click a header to cycle asc → desc → none. Shift+click a second header for
+multi-column sort.
+
+```jsx live
+<OpenGrid rowData={employees} columnDefs={columns} height={280} />
+```
+
 ## Enabling Sorting
 
 Set `sortable: true` on any `ColumnDef`:

@@ -7,6 +7,23 @@ sidebar_position: 1
 
 OpenGrid is a production-grade, open-source data grid library designed as an alternative to AG Grid.
 
+## Try it out
+
+Edit the code below — it runs live in your browser. `employees` and `columns`
+are sample data provided in scope; try toggling props like `showFilterRow`,
+`checkboxSelection`, or `grouping`.
+
+```jsx live
+<OpenGrid
+  rowData={employees}
+  columnDefs={columns}
+  height={300}
+  selection="multiple"
+  checkboxSelection
+  showFilterRow
+/>
+```
+
 ## What is OpenGrid?
 
 OpenGrid is a monorepo containing:

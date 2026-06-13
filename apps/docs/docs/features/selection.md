@@ -6,6 +6,21 @@ sidebar_position: 4
 
 OpenGrid supports single, multiple, and range row selection.
 
+## Try it out
+
+Click the checkboxes, or shift+click a row to select a range. The header
+checkbox selects all.
+
+```jsx live
+<OpenGrid
+  rowData={employees}
+  columnDefs={columns}
+  height={280}
+  selection="multiple"
+  checkboxSelection
+/>
+```
+
 ## Enabling Selection
 
 ```tsx

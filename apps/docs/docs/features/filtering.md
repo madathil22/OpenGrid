@@ -7,6 +7,14 @@ sidebar_position: 2
 OpenGrid supports text, number, date, set, and custom filters, plus a global
 quick filter. Column filters combine with **AND**.
 
+## Try it out
+
+Type in the filter inputs below the headers to narrow the rows.
+
+```jsx live
+<OpenGrid rowData={employees} columnDefs={columns} height={280} showFilterRow />
+```
+
 ## Enabling the Filter Row
 
 ```tsx

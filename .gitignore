@@ -12,3 +12,6 @@ coverage/
 # Docusaurus build cache
 .docusaurus/
 build/
+
+# Claude Code local settings (personal)
+.claude/settings.local.json
