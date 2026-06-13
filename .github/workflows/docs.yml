@@ -43,6 +43,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The docs site imports @opengrid/react and @opengrid/themes from their
+      # built dist/ output, so the workspace packages must be built first.
+      - name: Build packages
+        run: pnpm build
+
       - name: Build docs
         run: pnpm --filter @opengrid/docs build
 
