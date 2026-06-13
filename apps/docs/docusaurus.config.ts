@@ -6,11 +6,13 @@ const config: Config = {
   title: 'OpenGrid',
   tagline: 'The open-source enterprise data grid',
   favicon: 'img/favicon.ico',
-  url: 'https://opengrid.dev',
-  baseUrl: '/',
-  organizationName: 'opengrid',
-  projectName: 'opengrid',
-  onBrokenLinks: 'warn',
+  // Deployed to GitHub Pages as a project site: https://madathil22.github.io/OpenGrid/
+  url: 'https://madathil22.github.io',
+  baseUrl: '/OpenGrid/',
+  organizationName: 'madathil22',
+  projectName: 'OpenGrid',
+  trailingSlash: false,
+  onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   i18n: {
     defaultLocale: 'en',
@@ -22,7 +24,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/opengrid/opengrid/tree/main/apps/docs/',
+          editUrl: 'https://github.com/madathil22/OpenGrid/tree/main/apps/docs/',
         },
         blog: false,
         theme: {
@@ -36,7 +38,7 @@ const config: Config = {
       title: 'OpenGrid',
       items: [
         { type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs' },
-        { href: 'https://github.com/opengrid/opengrid', label: 'GitHub', position: 'right' },
+        { href: 'https://github.com/madathil22/OpenGrid', label: 'GitHub', position: 'right' },
       ],
     },
     footer: {
@@ -45,14 +47,14 @@ const config: Config = {
         {
           title: 'Docs',
           items: [
-            { label: 'Getting Started', to: '/docs/intro' },
+            { label: 'Getting Started', to: '/docs' },
             { label: 'API Reference', to: '/docs/api/column-defs' },
           ],
         },
         {
           title: 'Community',
           items: [
-            { label: 'GitHub', href: 'https://github.com/opengrid/opengrid' },
+            { label: 'GitHub', href: 'https://github.com/madathil22/OpenGrid' },
           ],
         },
       ],

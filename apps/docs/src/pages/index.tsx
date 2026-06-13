@@ -12,12 +12,12 @@ function HomepageHeader() {
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--primary button--lg" to="/docs/intro">
+          <Link className="button button--primary button--lg" to="/docs">
             Get Started →
           </Link>
           <Link
             className="button button--secondary button--lg"
-            href="https://github.com/opengrid/opengrid"
+            href="https://github.com/madathil22/OpenGrid"
           >
             GitHub
           </Link>
