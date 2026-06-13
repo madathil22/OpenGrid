@@ -53,19 +53,25 @@ export function OpenGrid<TData = RowData>({
       heightCache,
     });
 
-  // Build effective column widths map
+  // Build effective column widths map. `selectedRows` is included intentionally:
+  // it changes identity on every grid notification (resize/move/pin), forcing
+  // the width map to recompute against the latest ColumnModel state.
   const columnWidths = useMemo<Map<string, number>>(() => {
     const map = new Map<string, number>();
     for (const col of columnDefs) {
       map.set(col.field, api.columnModel.getEffectiveWidth(col.field));
     }
     return map;
-  }, [columnDefs, api.columnModel, selectedRows]); // selectedRows triggers re-render on column changes too
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnDefs, api.columnModel, selectedRows]);
 
-  // Pinned column groups
+  // Pinned column groups. `columnDefs` is an intentional dependency so the
+  // groups recompute when columns are reordered, pinned, or hidden.
+  /* eslint-disable react-hooks/exhaustive-deps */
   const pinnedLeft = useMemo(() => api.columnModel.getPinnedLeftColumns(), [columnDefs, api.columnModel]);
   const pinnedRight = useMemo(() => api.columnModel.getPinnedRightColumns(), [columnDefs, api.columnModel]);
   const centerCols = useMemo(() => api.columnModel.getCenterColumns(), [columnDefs, api.columnModel]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const pinnedLeftWidth = useMemo(
     () => pinnedLeft.reduce((sum, col) => sum + (columnWidths.get(col.field) ?? col.width ?? 150), 0),
@@ -80,8 +86,10 @@ export function OpenGrid<TData = RowData>({
     [centerCols, columnWidths],
   );
 
+  // `selectedRows` drives recompute of the selected-id set after each toggle.
   const selectedIds = useMemo(() => {
     return new Set(api.selectionModel.getSelectedIds());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRows, api.selectionModel]);
 
   const handleRowClick = useCallback(
@@ -124,7 +132,7 @@ export function OpenGrid<TData = RowData>({
   );
 
   /** Render a pane of rows for a given column set */
-  const renderRows = (cols: ColumnDef<TData>[], paneOffsetX: number) =>
+  const renderRows = (cols: ColumnDef<TData>[]) =>
     visibleSlice.map((node, i) => {
       const absoluteIndex = startIndex + i;
       const rowOffsetY = getRowOffsetY(absoluteIndex) - getRowOffsetY(startIndex) + offsetY;
@@ -199,7 +207,7 @@ export function OpenGrid<TData = RowData>({
             }}
           >
             <div style={{ height: totalHeight, position: 'relative' }}>
-              {renderRows(pinnedLeft, 0)}
+              {renderRows(pinnedLeft)}
             </div>
           </div>
         )}
@@ -213,7 +221,7 @@ export function OpenGrid<TData = RowData>({
           role="rowgroup"
         >
           <div style={{ height: totalHeight, width: centerTotalWidth, position: 'relative' }}>
-            {renderRows(centerCols, 0)}
+            {renderRows(centerCols)}
           </div>
         </div>
 
@@ -231,7 +239,7 @@ export function OpenGrid<TData = RowData>({
             }}
           >
             <div style={{ height: totalHeight, position: 'relative' }}>
-              {renderRows(pinnedRight, 0)}
+              {renderRows(pinnedRight)}
             </div>
           </div>
         )}

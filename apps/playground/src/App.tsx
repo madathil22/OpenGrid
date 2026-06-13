@@ -79,7 +79,6 @@ export default function App() {
   const [rowCount, setRowCount] = useState(10000);
   const [variableHeight, setVariableHeight] = useState(false);
   const apiRef = useRef<GridApi<EmployeeRow> | null>(null);
-  const csvExporter = new CsvExporter();
 
   const handleGridReady = (api: GridApi<EmployeeRow>) => {
     apiRef.current = api;

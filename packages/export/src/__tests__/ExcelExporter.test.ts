@@ -18,7 +18,7 @@ describe('ExcelExporter', () => {
   it('returns an ArrayBuffer', () => {
     const result = exporter.export({ columns, rows });
     expect(result).toBeInstanceOf(ArrayBuffer);
-    expect((result as ArrayBuffer).byteLength).toBeGreaterThan(0);
+    expect(result.byteLength).toBeGreaterThan(0);
   });
 
   it('produces readable xlsx with correct data', () => {
@@ -42,7 +42,7 @@ describe('ExcelExporter', () => {
     const data = exporter.export({ columns, rows, includeHeaders: false });
     const wb = XLSX.read(data, { type: 'array' });
     const sheet = wb.Sheets['Sheet1'];
-    const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet!, { header: 1 }) as unknown[][];
+    const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet!, { header: 1 });
     expect(raw[0]?.[0]).toBe('Alice');
   });
 });

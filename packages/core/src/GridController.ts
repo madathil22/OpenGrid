@@ -147,7 +147,7 @@ export class GridController<TData = RowData> implements GridApi<TData> {
 
   setSortModel(model: SortModelType[]): void {
     this.sortModel.clearSorts();
-    model.forEach((entry, i) => {
+    model.forEach((entry) => {
       this.sortModel.addSort(entry.colId, entry.sort);
     });
     this._recompute();
