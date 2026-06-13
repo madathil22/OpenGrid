@@ -48,8 +48,8 @@ const ALL_DATA = generateData(10000);
 // ─── Column definitions ──────────────────────────────────────────────────────
 
 const columns: ColumnDef<EmployeeRow>[] = [
-  { field: 'id', headerName: 'ID', width: 70, sortable: true },
-  { field: 'name', headerName: 'Name', width: 180, sortable: true, filterable: true },
+  { field: 'id', headerName: 'ID', width: 70, sortable: true, pinned: 'left' },
+  { field: 'name', headerName: 'Name', width: 180, sortable: true, filterable: true, pinned: 'left' },
   { field: 'department', headerName: 'Department', width: 160, sortable: true, filterable: true, groupable: true },
   { field: 'role', headerName: 'Role', width: 120, sortable: true, filterable: true, groupable: true },
   {
@@ -65,7 +65,8 @@ const columns: ColumnDef<EmployeeRow>[] = [
   {
     field: 'active',
     headerName: 'Active',
-    width: 80,
+    width: 90,
+    pinned: 'right',
     valueFormatter: ({ value }) => (value ? '✓' : '✗'),
   },
 ];
@@ -76,6 +77,7 @@ export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [showFilterRow, setShowFilterRow] = useState(false);
   const [rowCount, setRowCount] = useState(10000);
+  const [variableHeight, setVariableHeight] = useState(false);
   const apiRef = useRef<GridApi<EmployeeRow> | null>(null);
   const csvExporter = new CsvExporter();
 
@@ -101,6 +103,10 @@ export default function App() {
     headerHeight: 40,
     selection: 'multiple',
     onGridReady: (e) => handleGridReady(e.api),
+    // Variable row height: every 3rd row is taller
+    getRowHeight: variableHeight
+      ? ({ rowIndex }) => (rowIndex % 3 === 0 ? 64 : 40)
+      : undefined,
   };
 
   return (
@@ -116,7 +122,8 @@ export default function App() {
     >
       <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 700 }}>OpenGrid Playground</h1>
       <p style={{ margin: '0 0 20px', opacity: 0.7, fontSize: 14 }}>
-        Showing {rowCount.toLocaleString()} rows — virtual scrolling, sorting, filtering, selection
+        Showing {rowCount.toLocaleString()} rows — virtual scrolling, pinned columns (ID/Name left, Active right),
+        sorting, filtering, selection{variableHeight ? ', variable row heights' : ''}
       </p>
 
       {/* Toolbar */}
@@ -126,6 +133,9 @@ export default function App() {
         </button>
         <button onClick={() => setShowFilterRow(!showFilterRow)}>
           {showFilterRow ? 'Hide' : 'Show'} Filter Row
+        </button>
+        <button onClick={() => setVariableHeight(!variableHeight)}>
+          {variableHeight ? 'Fixed' : 'Variable'} Row Height
         </button>
         <button onClick={handleExportCsv}>Export CSV</button>
         <button onClick={handleSizeToFit}>Size Columns to Fit</button>
@@ -212,6 +222,9 @@ export default function App() {
         .og-header-cell:hover .og-resize-handle { opacity: 1; }
         .og-resize-handle:hover { background: #4285f4; opacity: 1; }
         .og-body { position: relative; overflow: auto; }
+        .og-pinned-left-header, .og-pinned-left-body { box-shadow: 2px 0 4px rgba(0,0,0,0.08); background: #fff; }
+        .og-pinned-right-header, .og-pinned-right-body { box-shadow: -2px 0 4px rgba(0,0,0,0.08); background: #fff; }
+        .og-pinned-left-header, .og-pinned-right-header { background: #f8f9fa; }
         .og-row {
           display: flex; align-items: center; position: absolute;
           left: 0; right: 0; background: #fff; border-bottom: 1px solid #e0e0e0;

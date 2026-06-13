@@ -13,6 +13,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Features',
       items: [
+        'features/virtualization',
         'features/sorting',
         'features/filtering',
         'features/grouping',

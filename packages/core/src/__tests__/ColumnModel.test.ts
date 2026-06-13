@@ -71,4 +71,72 @@ describe('ColumnModel', () => {
     const state = model.getColumnState().find((s) => s.colId === 'name');
     expect(state?.width).toBe(300);
   });
+
+  describe('pinned column groups', () => {
+    beforeEach(() => {
+      model = new ColumnModel<Row>();
+      model.setColumns([
+        { field: 'name', width: 200, pinned: 'left' },
+        { field: 'age', width: 100 },
+        { field: 'city', width: 150 },
+        { field: 'actions', width: 80, pinned: 'right' },
+      ]);
+    });
+
+    it('splits columns into left / center / right groups', () => {
+      expect(model.getPinnedLeftColumns().map((c) => c.field)).toEqual(['name']);
+      expect(model.getCenterColumns().map((c) => c.field)).toEqual(['age', 'city']);
+      expect(model.getPinnedRightColumns().map((c) => c.field)).toEqual(['actions']);
+    });
+
+    it('respects runtime pin state over the column def', () => {
+      model.setPinned('age', 'left');
+      expect(model.getPinnedLeftColumns().map((c) => c.field)).toEqual(['name', 'age']);
+      expect(model.getCenterColumns().map((c) => c.field)).toEqual(['city']);
+    });
+
+    it('excludes hidden columns from all groups', () => {
+      model.hideColumn('name');
+      expect(model.getPinnedLeftColumns()).toHaveLength(0);
+    });
+  });
+
+  describe('applyFlexWidths', () => {
+    beforeEach(() => {
+      model = new ColumnModel<Row>();
+    });
+
+    it('distributes remaining width across flex columns by ratio', () => {
+      model.setColumns([
+        { field: 'name', width: 100 },
+        { field: 'age', flex: 1 },
+        { field: 'city', flex: 3 },
+      ]);
+      // available 500, fixed 100 → 400 remaining, split 1:3 → 100 / 300
+      model.applyFlexWidths(500);
+      expect(model.getEffectiveWidth('age')).toBe(100);
+      expect(model.getEffectiveWidth('city')).toBe(300);
+    });
+
+    it('clamps a flex column to its minWidth', () => {
+      model.setColumns([
+        { field: 'name', width: 400 },
+        { field: 'age', flex: 1, minWidth: 120 },
+      ]);
+      // remaining = 50, but minWidth forces 120
+      model.applyFlexWidths(450);
+      expect(model.getEffectiveWidth('age')).toBe(120);
+    });
+
+    it('is a no-op when no columns are flex', () => {
+      model.setColumns([{ field: 'name', width: 100 }]);
+      model.applyFlexWidths(800);
+      expect(model.getEffectiveWidth('name')).toBe(100);
+    });
+  });
+
+  it('autoSizeColumn sets the measured width', () => {
+    model.autoSizeColumn('name', 275);
+    expect(model.getEffectiveWidth('name')).toBe(275);
+  });
 });

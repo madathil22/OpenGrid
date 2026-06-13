@@ -11,6 +11,8 @@ export interface GridRowProps<TData = RowData> {
   offsetY: number;
   onClick: (node: RowNode<TData>, e: React.MouseEvent) => void;
   onGroupToggle: (groupId: string) => void;
+  /** Map from colId → effective width */
+  columnWidths?: Map<string, number>;
 }
 
 export function GridRow<TData = RowData>({
@@ -21,6 +23,7 @@ export function GridRow<TData = RowData>({
   offsetY,
   onClick,
   onGroupToggle,
+  columnWidths,
 }: GridRowProps<TData>) {
   const style: React.CSSProperties = {
     position: 'absolute',
@@ -51,7 +54,12 @@ export function GridRow<TData = RowData>({
       }}
     >
       {columns.map((col) => (
-        <GridCell key={col.field} column={col} node={node} />
+        <GridCell
+          key={col.field}
+          column={col}
+          node={node}
+          effectiveWidth={columnWidths?.get(col.field)}
+        />
       ))}
     </div>
   );

@@ -25,6 +25,10 @@ export interface ColumnDef<TData = Record<string, unknown>> {
   /** Aggregation function name */
   aggFunc?: AggFunction;
   groupable?: boolean;
+  /** Auto-compute width from content */
+  autoSize?: boolean;
+  /** Flex grow factor (like CSS flex) */
+  flex?: number;
 }
 
 export interface CellRendererParams<TData = Record<string, unknown>> {
@@ -115,6 +119,10 @@ export interface GridApi<TData = RowData> {
   hideColumn(colId: string): void;
   getColumnState(): ColumnState[];
   setColumnState(states: ColumnState[]): void;
+  autoSizeColumn(colId: string, measuredWidth: number): void;
+  applyFlexWidths(viewportWidth: number): void;
+  resizeColumn(colId: string, width: number): void;
+  moveColumn(colId: string, toIndex: number): void;
 }
 
 // ─── Grid Options ────────────────────────────────────────────────────────────
@@ -135,6 +143,8 @@ export interface GridOptions<TData = RowData> {
   onColumnResized?: (colId: string, width: number) => void;
   onColumnMoved?: (colId: string, toIndex: number) => void;
   onGridReady?: (event: GridReadyEvent<TData>) => void;
+  /** Return variable row height for a given row */
+  getRowHeight?: (params: { data: TData; rowIndex: number }) => number;
 }
 
 // ─── Events ──────────────────────────────────────────────────────────────────

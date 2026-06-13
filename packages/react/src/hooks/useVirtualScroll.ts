@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
-import { RenderEngine } from '@opengrid/core';
+import { RenderEngine, RowHeightCache } from '@opengrid/core';
 import type { RowWindowResult } from '@opengrid/core';
 
 export interface UseVirtualScrollParams {
@@ -7,6 +7,7 @@ export interface UseVirtualScrollParams {
   rowHeight: number;
   viewportHeight: number;
   overscan?: number;
+  heightCache?: RowHeightCache;
 }
 
 export interface UseVirtualScrollReturn {
@@ -15,6 +16,7 @@ export interface UseVirtualScrollReturn {
   totalHeight: number;
   offsetY: number;
   scrollTop: number;
+  scrollLeft: number;
   onScroll: (e: React.UIEvent<HTMLElement>) => void;
   containerRef: React.RefObject<HTMLDivElement>;
 }
@@ -22,24 +24,40 @@ export interface UseVirtualScrollReturn {
 const engine = new RenderEngine();
 
 export function useVirtualScroll(params: UseVirtualScrollParams): UseVirtualScrollReturn {
-  const { totalRows, rowHeight, viewportHeight, overscan = 3 } = params;
+  const { totalRows, rowHeight, viewportHeight, overscan = 3, heightCache } = params;
   const scrollTopRef = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
+  const scrollLeftRef = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const computeWindow = useCallback(
     (scrollTop: number): RowWindowResult =>
-      engine.computeRowWindow({ scrollTop, viewportHeight, rowHeight, totalRows, overscan }),
-    [viewportHeight, rowHeight, totalRows, overscan],
+      engine.computeRowWindow({ scrollTop, viewportHeight, rowHeight, totalRows, overscan, heightCache }),
+    [viewportHeight, rowHeight, totalRows, overscan, heightCache],
   );
 
   const [window, setWindow] = useState<RowWindowResult>(() => computeWindow(0));
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   const onScroll = useCallback(
     (e: React.UIEvent<HTMLElement>) => {
-      const newScrollTop = (e.currentTarget as HTMLElement).scrollTop;
-      if (newScrollTop === scrollTopRef.current) return;
-      scrollTopRef.current = newScrollTop;
-      setWindow(computeWindow(newScrollTop));
+      const el = e.currentTarget as HTMLElement;
+      const newScrollTop = el.scrollTop;
+      const newScrollLeft = el.scrollLeft;
+      let changed = false;
+
+      if (newScrollTop !== scrollTopRef.current) {
+        scrollTopRef.current = newScrollTop;
+        setWindow(computeWindow(newScrollTop));
+        changed = true;
+      }
+
+      if (newScrollLeft !== scrollLeftRef.current) {
+        scrollLeftRef.current = newScrollLeft;
+        setScrollLeft(newScrollLeft);
+        changed = true;
+      }
+
+      void changed; // suppress lint warning
     },
     [computeWindow],
   );
@@ -50,6 +68,7 @@ export function useVirtualScroll(params: UseVirtualScrollParams): UseVirtualScro
     totalHeight: window.totalHeight,
     offsetY: window.offsetY,
     scrollTop: scrollTopRef.current,
+    scrollLeft,
     onScroll,
     containerRef,
   };

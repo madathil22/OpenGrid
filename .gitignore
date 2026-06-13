@@ -8,3 +8,7 @@ coverage/
 !.env.example
 *.tsbuildinfo
 .DS_Store
+
+# Docusaurus build cache
+.docusaurus/
+build/

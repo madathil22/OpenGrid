@@ -26,7 +26,7 @@ export { FilterModel as FilterModelClass } from './models/FilterModel.js';
 export { SelectionModel } from './models/SelectionModel.js';
 
 // Engines
-export { RenderEngine } from './engines/RenderEngine.js';
+export { RenderEngine, RowHeightCache } from './engines/RenderEngine.js';
 export type { RowWindowParams, RowWindowResult, ColumnWindowParams, ColumnWindowResult } from './engines/RenderEngine.js';
 export { GroupingEngine } from './engines/GroupingEngine.js';
 export { aggregations, aggregate } from './engines/AggregationEngine.js';

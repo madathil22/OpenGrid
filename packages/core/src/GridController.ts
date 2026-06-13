@@ -219,4 +219,25 @@ export class GridController<TData = RowData> implements GridApi<TData> {
       this.options.onColumnMoved(colId, toIndex);
     }
   }
+
+  autoSizeColumn(colId: string, measuredWidth: number): void {
+    this.columnModel.autoSizeColumn(colId, measuredWidth);
+    this._notify();
+  }
+
+  applyFlexWidths(viewportWidth: number): void {
+    this.columnModel.applyFlexWidths(viewportWidth);
+    this._notify();
+  }
+
+  getRowHeight(rowIndex: number): number {
+    if (this.options.getRowHeight) {
+      const nodes = this.dataModel.getRowNodes();
+      const node = nodes[rowIndex];
+      if (node) {
+        return this.options.getRowHeight({ data: node.data, rowIndex });
+      }
+    }
+    return this.options.rowHeight ?? 40;
+  }
 }

@@ -12,7 +12,8 @@ sidebar_position: 2
 interface GridOptions<TData> {
   rowData?: TData[];
   columnDefs?: ColumnDef<TData>[];
-  rowHeight?: number;           // default: 40
+  rowHeight?: number;           // default: 40 (fixed-height mode)
+  getRowHeight?: (params: { data: TData; rowIndex: number }) => number; // variable heights
   headerHeight?: number;        // default: 40
   pagination?: boolean;
   pageSize?: number;

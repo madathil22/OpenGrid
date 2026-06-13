@@ -5,6 +5,8 @@ export interface GridCellProps<TData = RowData> {
   column: ColumnDef<TData>;
   node: RowNode<TData>;
   style?: React.CSSProperties;
+  /** Effective column width (overrides column.width) */
+  effectiveWidth?: number;
 }
 
 function getFieldValue(data: unknown, field: string): unknown {
@@ -14,7 +16,7 @@ function getFieldValue(data: unknown, field: string): unknown {
   return undefined;
 }
 
-export function GridCell<TData = RowData>({ column, node, style }: GridCellProps<TData>) {
+export function GridCell<TData = RowData>({ column, node, style, effectiveWidth }: GridCellProps<TData>) {
   let value: unknown;
 
   if (column.valueGetter) {
@@ -48,7 +50,7 @@ export function GridCell<TData = RowData>({ column, node, style }: GridCellProps
     <div
       className="og-cell"
       style={{
-        width: column.width ?? 150,
+        width: effectiveWidth ?? column.width ?? 150,
         minWidth: column.minWidth,
         maxWidth: column.maxWidth,
         ...style,

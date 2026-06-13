@@ -5,9 +5,11 @@ export interface GridHeaderProps<TData = RowData> {
   columns: ColumnDef<TData>[];
   sortModel: SortModel[];
   api: GridController<TData>;
+  /** Map from colId → effective width */
+  columnWidths?: Map<string, number>;
 }
 
-export function GridHeader<TData = RowData>({ columns, sortModel, api }: GridHeaderProps<TData>) {
+export function GridHeader<TData = RowData>({ columns, sortModel, api, columnWidths }: GridHeaderProps<TData>) {
   const dragSourceRef = useRef<string | null>(null);
 
   const getSortDirection = (colId: string): 'asc' | 'desc' | null => {
@@ -83,7 +85,7 @@ export function GridHeader<TData = RowData>({ columns, sortModel, api }: GridHea
           <div
             key={col.field}
             className={`og-header-cell${sort ? ` og-sort-${sort}` : ''}`}
-            style={{ width: col.width ?? 150, minWidth: col.minWidth, maxWidth: col.maxWidth }}
+            style={{ width: columnWidths?.get(col.field) ?? col.width ?? 150, minWidth: col.minWidth, maxWidth: col.maxWidth }}
             role="columnheader"
             aria-sort={sort === 'asc' ? 'ascending' : sort === 'desc' ? 'descending' : 'none'}
             onClick={(e) => handleSortClick(col, e)}

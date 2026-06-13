@@ -143,4 +143,56 @@ export class ColumnModel<TData = Record<string, unknown>> {
     const col = this.getColumnById(colId);
     return col?.width ?? 150;
   }
+
+  getPinnedLeftColumns(): ColumnDef<TData>[] {
+    return this.getVisibleColumns().filter((col) => {
+      const state = this.columnState.get(col.field);
+      return (state?.pinned ?? col.pinned ?? null) === 'left';
+    });
+  }
+
+  getPinnedRightColumns(): ColumnDef<TData>[] {
+    return this.getVisibleColumns().filter((col) => {
+      const state = this.columnState.get(col.field);
+      return (state?.pinned ?? col.pinned ?? null) === 'right';
+    });
+  }
+
+  getCenterColumns(): ColumnDef<TData>[] {
+    return this.getVisibleColumns().filter((col) => {
+      const state = this.columnState.get(col.field);
+      const pinned = state?.pinned ?? col.pinned ?? null;
+      return pinned === null || pinned === undefined;
+    });
+  }
+
+  applyFlexWidths(availableWidth: number): void {
+    const visibleCols = this.getVisibleColumns();
+    const flexCols = visibleCols.filter((col) => col.flex != null && col.flex > 0);
+    if (flexCols.length === 0) return;
+
+    // Sum of fixed widths (non-flex columns)
+    let usedWidth = 0;
+    for (const col of visibleCols) {
+      if (!col.flex) {
+        usedWidth += this.getEffectiveWidth(col.field);
+      }
+    }
+
+    const remaining = Math.max(0, availableWidth - usedWidth);
+    const totalFlex = flexCols.reduce((sum, col) => sum + (col.flex ?? 0), 0);
+
+    for (const col of flexCols) {
+      const flexRatio = (col.flex ?? 0) / totalFlex;
+      const computed = Math.floor(remaining * flexRatio);
+      const minW = col.minWidth ?? 40;
+      const maxW = col.maxWidth ?? Infinity;
+      const clamped = Math.max(minW, Math.min(maxW, computed));
+      this.resizeColumn(col.field, clamped);
+    }
+  }
+
+  autoSizeColumn(colId: string, measuredWidth: number): void {
+    this.resizeColumn(colId, measuredWidth);
+  }
 }
