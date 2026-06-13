@@ -33,6 +33,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Build first so workspace packages expose their dist/*.d.ts type
+      # declarations, which downstream packages (e.g. @opengrid/react) resolve
+      # against during typecheck.
+      - name: Build all packages
+        run: pnpm build
+
       - name: Typecheck
         run: pnpm -r --filter='./packages/*' typecheck
 
@@ -49,9 +55,6 @@ jobs:
         with:
           name: coverage
           path: coverage/
-
-      - name: Build all packages
-        run: pnpm build
 
       - name: Check bundle sizes
         run: |
