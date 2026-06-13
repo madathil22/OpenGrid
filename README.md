@@ -69,3 +69,8 @@ migration recipe, and an honest feature-parity matrix written for agent consumpt
 [MIT](./LICENSE) © OpenGrid contributors. Free for any use, commercial or
 otherwise, including in proprietary and enterprise applications — no fees, no
 feature gates, no contributor license agreement required.
+
+`@opengrid/core` and `@opengrid/themes` have **zero runtime dependencies**.
+Excel export depends on `xlsx` only as an **optional** peer dependency. See
+[THIRD-PARTY-LICENSES.md](./THIRD-PARTY-LICENSES.md) for the full dependency and
+license audit.
