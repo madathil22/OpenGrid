@@ -49,9 +49,28 @@ export default function App() {
 
 ```bash
 pnpm install
-pnpm build
-pnpm test
+pnpm build      # build all packages
+pnpm test       # unit + integration (Vitest)
+pnpm lint
+pnpm --filter @opengrid/playground e2e   # browser smoke tests (Playwright)
 ```
+
+## Security & dependencies
+
+OpenGrid is built to stay easy to upgrade and patch:
+
+- **Minimal runtime surface.** `@opengrid/core` and `@opengrid/themes` have
+  **zero** runtime dependencies; `@opengrid/react` takes `react` as a peer; the
+  only optional runtime dep is `xlsx` (Excel export), which is **swappable**
+  behind the `ExcelWriter` interface. See
+  [THIRD-PARTY-LICENSES.md](./THIRD-PARTY-LICENSES.md).
+- **Third-party libraries live behind our own interfaces**, so a vulnerable or
+  unmaintained dependency can be replaced without an API change.
+- **Automated scanning.** Dependabot opens grouped update + security PRs
+  (`.github/dependabot.yml`); CI runs `pnpm audit --prod` and a full
+  build/typecheck/test/e2e gate so every dependency bump is validated before
+  merge. `pnpm.overrides` is the escape hatch for force-patching a transitive
+  CVE immediately.
 
 ## Migrating from AG Grid
 

@@ -1,0 +1,42 @@
+version: 2
+updates:
+  # JavaScript/TypeScript dependencies (pnpm workspace).
+  # Dependabot reads the root lockfile and covers every workspace package.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    # Security advisories always open PRs immediately, regardless of schedule.
+    groups:
+      # Batch low-risk dev tooling so routine bumps are one reviewable PR.
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      # Batch production minor/patch bumps; majors come as individual PRs.
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      prefix-development: deps-dev
+
+  # Keep GitHub Actions pinned versions current (this would have flagged the
+  # Node 20 runtime deprecation automatically).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: ci
