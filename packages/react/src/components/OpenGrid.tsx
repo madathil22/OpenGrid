@@ -49,7 +49,7 @@ export function OpenGrid<TData = RowData>({
   const filterRowHeight = showFilterRow ? headerHeight : 0;
   const viewportHeight = height - headerHeight - filterRowHeight;
 
-  const { startIndex, endIndex, totalHeight, offsetY, scrollLeft, onScroll, containerRef } =
+  const { startIndex, endIndex, totalHeight, offsetY, scrollTop, scrollLeft, onScroll, containerRef } =
     useVirtualScroll({
       totalRows: visibleRows.length,
       rowHeight,
@@ -258,7 +258,13 @@ export function OpenGrid<TData = RowData>({
               zIndex: 1,
             }}
           >
-            <div style={{ height: totalHeight, position: 'relative' }}>
+            <div
+              style={{
+                height: totalHeight,
+                position: 'relative',
+                transform: `translateY(-${scrollTop}px)`,
+              }}
+            >
               {renderRows(pinnedLeft)}
             </div>
           </div>
@@ -290,7 +296,13 @@ export function OpenGrid<TData = RowData>({
               zIndex: 1,
             }}
           >
-            <div style={{ height: totalHeight, position: 'relative' }}>
+            <div
+              style={{
+                height: totalHeight,
+                position: 'relative',
+                transform: `translateY(-${scrollTop}px)`,
+              }}
+            >
               {renderRows(pinnedRight)}
             </div>
           </div>
