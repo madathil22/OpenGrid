@@ -48,6 +48,7 @@ export function GridRow<TData = RowData>({
       style={style}
       role="row"
       aria-selected={isSelected}
+      data-og-row-id={node.id}
       onClick={(e) => onClick(node, e)}
       tabIndex={0}
       onKeyDown={(e) => {
