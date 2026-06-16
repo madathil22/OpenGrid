@@ -1,42 +1,26 @@
 version: 2
+# Security-only configuration — intentionally NO routine version-bump PRs.
+#
+# `open-pull-requests-limit: 0` disables scheduled version updates, so Dependabot
+# will not open the steady stream of "bump X from 1.2.3 to 1.2.4" PRs. Dependabot
+# *security* updates are unaffected by this limit and still open a PR when a real
+# advisory affects a dependency (rare). Routine freshness is instead covered by
+# the CI `pnpm audit --prod` job, which surfaces issues without creating PRs.
 updates:
-  # JavaScript/TypeScript dependencies (pnpm workspace).
-  # Dependabot reads the root lockfile and covers every workspace package.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-      day: monday
-    open-pull-requests-limit: 10
-    # Security advisories always open PRs immediately, regardless of schedule.
-    groups:
-      # Batch low-risk dev tooling so routine bumps are one reviewable PR.
-      dev-dependencies:
-        dependency-type: development
-        update-types:
-          - minor
-          - patch
-      # Batch production minor/patch bumps; majors come as individual PRs.
-      production-minor-patch:
-        dependency-type: production
-        update-types:
-          - minor
-          - patch
+    open-pull-requests-limit: 0
     labels:
       - dependencies
-    commit-message:
-      prefix: deps
-      prefix-development: deps-dev
+      - security
 
-  # Keep GitHub Actions pinned versions current (this would have flagged the
-  # Node 20 runtime deprecation automatically).
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-      day: monday
+    open-pull-requests-limit: 0
     labels:
       - dependencies
-      - ci
-    commit-message:
-      prefix: ci
+      - security
