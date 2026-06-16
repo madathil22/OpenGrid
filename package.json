@@ -14,7 +14,7 @@
     "clean": "pnpm -r exec -- rm -rf dist node_modules/.cache"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^25.9.3",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitest/coverage-v8": "^1.0.0",
