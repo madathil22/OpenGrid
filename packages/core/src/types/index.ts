@@ -2,6 +2,15 @@
 
 export type AggFunction = 'sum' | 'count' | 'min' | 'max' | 'avg';
 
+/** Custom aggregation: receives the leaf values + nodes under a group. */
+export type AggFuncCustom<TData = RowData> = (params: {
+  values: unknown[];
+  nodes: RowNode<TData>[];
+  field: string;
+}) => unknown;
+
+export type ColumnAggFunc<TData = RowData> = AggFunction | AggFuncCustom<TData>;
+
 export interface ColumnDef<TData = Record<string, unknown>> {
   /** Unique field key on TData */
   field: string;
@@ -22,8 +31,8 @@ export interface ColumnDef<TData = Record<string, unknown>> {
   valueGetter?: (params: ValueGetterParams<TData>) => unknown;
   /** Format the displayed value */
   valueFormatter?: (params: ValueFormatterParams<TData>) => string;
-  /** Aggregation function name */
-  aggFunc?: AggFunction;
+  /** Aggregation function name, or a custom aggregation function. */
+  aggFunc?: ColumnAggFunc<TData>;
   groupable?: boolean;
   /** Auto-compute width from content */
   autoSize?: boolean;
@@ -73,7 +82,19 @@ export interface RowNode<TData = RowData> {
   children?: RowNode<TData>[];
   isGroup: boolean;
   groupKey?: string;
+  /** The raw group value (before the "field: value" label is built). */
+  groupValue?: unknown;
+  /** Field this group node groups by. */
+  groupField?: string;
+  /** Number of leaf rows under this group. */
+  childCount?: number;
   aggData?: Record<string, unknown>;
+  /** True for a group footer row (summary at the bottom of a group). */
+  isFooter?: boolean;
+  /** True for the grand-total footer at the very bottom. */
+  isGrandTotal?: boolean;
+  /** For footer rows, the id of the group they summarize. */
+  footerForGroupId?: string;
 }
 
 // ─── Sort / Filter ───────────────────────────────────────────────────────────
@@ -163,6 +184,13 @@ export interface GridApi<TData = RowData> {
   /** Clear the entire selection. */
   deselectAll(): void;
   getSelectedCount(): number;
+  /** Set the fields to group rows by (in order). Pass [] to clear grouping. */
+  setGroupColumns(fields: string[]): void;
+  getGroupColumns(): string[];
+  /** Expand or collapse a single group by id. */
+  setGroupExpanded(groupId: string, expanded: boolean): void;
+  expandAll(): void;
+  collapseAll(): void;
 }
 
 // ─── Grid Options ────────────────────────────────────────────────────────────
@@ -176,6 +204,13 @@ export interface GridOptions<TData = RowData> {
   pageSize?: number;
   grouping?: boolean;
   groupFields?: string[];
+  /** Render a summary footer row at the bottom of each group. */
+  groupIncludeFooter?: boolean;
+  /** Render a grand-total footer row at the very bottom. */
+  groupIncludeTotalFooter?: boolean;
+  /** Whether groups start expanded (default true). */
+  groupDefaultExpanded?: boolean;
+  onGroupExpandedChanged?: (groupId: string, expanded: boolean) => void;
   selection?: 'single' | 'multiple' | 'range' | false;
   onSelectionChanged?: (event: SelectionChangedEvent<TData>) => void;
   onSortChanged?: (model: SortModel[]) => void;

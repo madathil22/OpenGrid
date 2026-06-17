@@ -74,4 +74,54 @@ describe('GroupingEngine', () => {
     const toggled2 = engine.toggleGroup(groupId, toggled);
     expect(toggled2[0]?.expanded).toBe(true);
   });
+
+  it('records group metadata (field, value, childCount)', () => {
+    const grouped = engine.groupData(makeNodes(data), ['dept'], {});
+    const eng = grouped.find((g) => g.groupKey?.includes('Engineering'))!;
+    expect(eng.groupField).toBe('dept');
+    expect(eng.groupValue).toBe('Engineering');
+    expect(eng.childCount).toBe(2);
+  });
+
+  it('collapsedIds option hides children and is authoritative', () => {
+    const grouped = engine.groupData(makeNodes(data), ['dept'], {});
+    const firstId = grouped[0]!.id;
+    const flat = engine.flattenGroups(grouped, { collapsedIds: new Set([firstId]) });
+    // first group collapsed (1) + second group (1) + its 2 children = 4
+    expect(flat.length).toBe(4);
+    expect(flat.find((n) => n.id === firstId)?.expanded).toBe(false);
+  });
+
+  it('includeFooter emits a footer per expanded group with aggData', () => {
+    const grouped = engine.groupData(makeNodes(data), ['dept'], { salary: 'sum' });
+    const flat = engine.flattenGroups(grouped, { includeFooter: true });
+    // 2 groups + 4 leaves + 2 footers
+    expect(flat.length).toBe(8);
+    const footers = flat.filter((n) => n.isFooter);
+    expect(footers).toHaveLength(2);
+    const engFooter = footers.find((f) => f.footerForGroupId?.includes('Engineering'));
+    expect(engFooter?.aggData?.['salary']).toBe(190000);
+  });
+
+  it('nested grouping rolls aggregations up correctly', () => {
+    const grouped = engine.groupData(makeNodes(data), ['dept', 'role'], { salary: 'sum' });
+    const eng = grouped.find((g) => g.groupKey?.includes('Engineering'))!;
+    expect(eng.aggData?.['salary']).toBe(190000); // parent = sum across roles
+    expect(eng.children?.[0]?.isGroup).toBe(true); // nested role groups
+  });
+
+  it('supports a custom aggregation function', () => {
+    const grouped = engine.groupData(makeNodes(data), ['dept'], {
+      salary: ({ values }) => (values as number[]).filter((v) => v > 80000).length,
+    });
+    const eng = grouped.find((g) => g.groupKey?.includes('Engineering'))!;
+    expect(eng.aggData?.['salary']).toBe(2); // both Eng salaries > 80k
+  });
+
+  it('computeGrandTotal aggregates across every leaf', () => {
+    const total = engine.computeGrandTotal(makeNodes(data), { salary: 'sum' });
+    expect(total.isGrandTotal).toBe(true);
+    expect(total.aggData?.['salary']).toBe(325000);
+    expect(total.childCount).toBe(4);
+  });
 });

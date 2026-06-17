@@ -28,3 +28,19 @@ export function aggregate(
   const fn = aggregations[funcName];
   return fn(values);
 }
+
+/**
+ * Apply either a named aggregation or a custom aggregation function.
+ * Custom functions receive the leaf values, the leaf nodes, and the field id.
+ */
+export function aggregateWith<TNode>(
+  func: AggFunctionName | ((params: { values: unknown[]; nodes: TNode[]; field: string }) => unknown),
+  values: unknown[],
+  nodes: TNode[],
+  field: string,
+): unknown {
+  if (typeof func === 'function') {
+    return func({ values, nodes, field });
+  }
+  return aggregate(func, values);
+}

@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@opengrid/docs", "serve", "--port", "4599", "--no-open"],
       "port": 4599
+    },
+    {
+      "name": "playground",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@opengrid/playground", "dev", "--port", "4601", "--strictPort"],
+      "port": 4601
     }
   ]
 }

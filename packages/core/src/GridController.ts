@@ -30,8 +30,16 @@ export class GridController<TData = RowData> implements GridApi<TData> {
 
   private changeListeners: Set<() => void> = new Set();
 
+  // ── Grouping state ──────────────────────────────────────────────────────────
+  private groupFields: string[] = [];
+  private groupTree: RowNode<TData>[] | null = null;
+  private collapsedGroupIds: Set<string> = new Set();
+
   constructor(options: GridOptions<TData> = {}) {
     this.options = options;
+    if (options.groupFields && (options.grouping ?? true)) {
+      this.groupFields = [...options.groupFields];
+    }
     this.columnModel = new ColumnModel<TData>();
     this.dataModel = new DataModel<TData>();
     this.sortModel = new SortModel<TData>();
@@ -82,14 +90,60 @@ export class GridController<TData = RowData> implements GridApi<TData> {
     // Apply sorting
     nodes = this.sortModel.applySorting(nodes, columns);
 
+    const leaves = nodes;
+    const aggFunctions = this.groupingEngine.buildAggFunctionsFromColumns(columns);
+
     // Apply grouping
-    if (this.options.grouping && this.options.groupFields && this.options.groupFields.length > 0) {
-      const aggFunctions = this.groupingEngine.buildAggFunctionsFromColumns(columns);
-      const grouped = this.groupingEngine.groupData(nodes, this.options.groupFields, aggFunctions);
-      nodes = this.groupingEngine.flattenGroups(grouped);
+    if (this.groupFields.length > 0) {
+      const grouped = this.groupingEngine.groupData(leaves, this.groupFields, aggFunctions);
+      this.groupTree = grouped;
+      nodes = this.groupingEngine.flattenGroups(grouped, {
+        collapsedIds: this.collapsedGroupIds,
+        includeFooter: this.options.groupIncludeFooter ?? false,
+      });
+    } else {
+      this.groupTree = null;
+    }
+
+    // Grand-total footer (works with or without grouping, when aggregations exist).
+    if (this.options.groupIncludeTotalFooter && Object.keys(aggFunctions).length > 0) {
+      nodes = [...nodes, this.groupingEngine.computeGrandTotal(leaves, aggFunctions)];
     }
 
     this.dataModel.setRowNodes(nodes);
+  }
+
+  /** Re-flatten the stored group tree after a collapse/expand change. */
+  private _reflattenGroups(): void {
+    if (!this.groupTree) return;
+    const columns = this.columnModel.getColumns();
+    const aggFunctions = this.groupingEngine.buildAggFunctionsFromColumns(columns);
+    let nodes = this.groupingEngine.flattenGroups(this.groupTree, {
+      collapsedIds: this.collapsedGroupIds,
+      includeFooter: this.options.groupIncludeFooter ?? false,
+    });
+    if (this.options.groupIncludeTotalFooter && Object.keys(aggFunctions).length > 0) {
+      const leaves = this.dataModel
+        .getAllRowNodes()
+        .filter((n) => !n.isGroup);
+      nodes = [...nodes, this.groupingEngine.computeGrandTotal(leaves, aggFunctions)];
+    }
+    this.dataModel.setRowNodes(nodes);
+  }
+
+  /** Every group id in the current tree (for expand/collapse all). */
+  private _allGroupIds(): string[] {
+    const ids: string[] = [];
+    const walk = (nodes: RowNode<TData>[]): void => {
+      for (const n of nodes) {
+        if (n.isGroup) {
+          ids.push(n.id);
+          if (n.children) walk(n.children);
+        }
+      }
+    };
+    if (this.groupTree) walk(this.groupTree);
+    return ids;
   }
 
   getVisibleRows(): RowNode<TData>[] {
@@ -272,9 +326,42 @@ export class GridController<TData = RowData> implements GridApi<TData> {
   }
 
   toggleGroupExpand(groupId: string): void {
-    const updated = this.groupingEngine.toggleGroup(groupId, this.dataModel.getRowNodes());
-    this.dataModel.setRowNodes(updated);
+    this.setGroupExpanded(groupId, this.collapsedGroupIds.has(groupId));
+  }
+
+  setGroupExpanded(groupId: string, expanded: boolean): void {
+    if (expanded) {
+      this.collapsedGroupIds.delete(groupId);
+    } else {
+      this.collapsedGroupIds.add(groupId);
+    }
+    this._reflattenGroups();
     this._notify();
+    this.options.onGroupExpandedChanged?.(groupId, expanded);
+  }
+
+  expandAll(): void {
+    this.collapsedGroupIds.clear();
+    this._reflattenGroups();
+    this._notify();
+  }
+
+  collapseAll(): void {
+    this.collapsedGroupIds = new Set(this._allGroupIds());
+    this._reflattenGroups();
+    this._notify();
+  }
+
+  setGroupColumns(fields: string[]): void {
+    this.groupFields = [...fields];
+    // Group ids depend on the grouping fields, so prior collapse state is stale.
+    this.collapsedGroupIds.clear();
+    this._recompute();
+    this._notify();
+  }
+
+  getGroupColumns(): string[] {
+    return [...this.groupFields];
   }
 
   resizeColumn(colId: string, width: number): void {

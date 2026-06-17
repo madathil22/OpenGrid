@@ -132,4 +132,108 @@ describe('GridController', () => {
     ctrl.toggleSelectAll();
     expect(ctrl.getSelectedCount()).toBe(0);
   });
+
+  describe('grouping', () => {
+    const aggCols: ColumnDef<Row>[] = [
+      { field: 'name' },
+      { field: 'age', aggFunc: 'sum' },
+      { field: 'dept', groupable: true },
+    ];
+
+    it('groups rows from options (grouping + groupFields)', () => {
+      const ctrl = new GridController({
+        columnDefs: aggCols,
+        rowData,
+        grouping: true,
+        groupFields: ['dept'],
+      });
+      const rows = ctrl.getVisibleRows();
+      const groups = rows.filter((r) => r.isGroup);
+      // Engineering + Marketing
+      expect(groups).toHaveLength(2);
+      // groups + 3 leaves
+      expect(rows.filter((r) => !r.isGroup)).toHaveLength(3);
+    });
+
+    it('setGroupColumns groups/ungroups dynamically', () => {
+      const ctrl = new GridController({ columnDefs: aggCols, rowData });
+      expect(ctrl.getVisibleRows().some((r) => r.isGroup)).toBe(false);
+      ctrl.setGroupColumns(['dept']);
+      expect(ctrl.getGroupColumns()).toEqual(['dept']);
+      expect(ctrl.getVisibleRows().some((r) => r.isGroup)).toBe(true);
+      ctrl.setGroupColumns([]);
+      expect(ctrl.getVisibleRows().some((r) => r.isGroup)).toBe(false);
+    });
+
+    it('collapse hides children and persists across re-renders', () => {
+      const ctrl = new GridController({
+        columnDefs: aggCols,
+        rowData,
+        grouping: true,
+        groupFields: ['dept'],
+      });
+      const firstGroup = ctrl.getVisibleRows().find((r) => r.isGroup)!;
+      const before = ctrl.getVisibleRows().length;
+      ctrl.toggleGroupExpand(firstGroup.id);
+      const after = ctrl.getVisibleRows().length;
+      expect(after).toBeLessThan(before); // children hidden
+
+      // A re-render (e.g. selection change) must keep the group collapsed.
+      ctrl.selectAll();
+      expect(ctrl.getVisibleRows().length).toBe(after);
+    });
+
+    it('expandAll / collapseAll toggle every group', () => {
+      const ctrl = new GridController({
+        columnDefs: aggCols,
+        rowData,
+        grouping: true,
+        groupFields: ['dept'],
+      });
+      const expanded = ctrl.getVisibleRows().length;
+      ctrl.collapseAll();
+      const collapsed = ctrl.getVisibleRows().length;
+      expect(collapsed).toBeLessThan(expanded);
+      expect(ctrl.getVisibleRows().filter((r) => !r.isGroup)).toHaveLength(0);
+      ctrl.expandAll();
+      expect(ctrl.getVisibleRows().length).toBe(expanded);
+    });
+
+    it('group footers appear when groupIncludeFooter is set', () => {
+      const ctrl = new GridController({
+        columnDefs: aggCols,
+        rowData,
+        grouping: true,
+        groupFields: ['dept'],
+        groupIncludeFooter: true,
+      });
+      const footers = ctrl.getVisibleRows().filter((r) => r.isFooter);
+      expect(footers).toHaveLength(2); // one per group
+    });
+
+    it('grand-total footer aggregates all rows', () => {
+      const ctrl = new GridController({
+        columnDefs: aggCols,
+        rowData,
+        groupIncludeTotalFooter: true,
+      });
+      const rows = ctrl.getVisibleRows();
+      const total = rows.find((r) => r.isGrandTotal);
+      expect(total).toBeTruthy();
+      expect(total?.aggData?.['age']).toBe(30 + 25 + 35);
+    });
+
+    it('aggregations compute per group', () => {
+      const ctrl = new GridController({
+        columnDefs: aggCols,
+        rowData,
+        grouping: true,
+        groupFields: ['dept'],
+      });
+      const eng = ctrl
+        .getVisibleRows()
+        .find((r) => r.isGroup && r.groupKey?.includes('Engineering'));
+      expect(eng?.aggData?.['age']).toBe(30 + 35); // Alice + Charlie
+    });
+  });
 });

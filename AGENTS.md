@@ -123,7 +123,9 @@ as **not yet available**, and tell the user rather than inventing an API.
   columns, flex/auto-size, multi-column sort with custom comparators (tri-state
   toggle, nulls-last), text/number/date/set/custom filters + global quick filter,
   single/multiple/row-range selection with checkbox column + select-all, client-side
-  row grouping + aggregations, CSV export, Excel export, light/dark themes.
+  row grouping (multi-level, dynamic via api.setGroupColumns) with aggregations,
+  custom aggregation functions, group footers + grand-total footer, CSV export,
+  Excel export, light/dark themes.
 - **Planned / partial (check the milestone before relying on it):** cell-range
   selection, master/detail rows, full column-state persistence, pagination UI.
 - **Out of scope (AG Grid enterprise features OpenGrid does NOT aim to replicate):**

@@ -79,6 +79,7 @@ export default function App() {
   const [rowCount, setRowCount] = useState(10000);
   const [variableHeight, setVariableHeight] = useState(false);
   const [quickFilter, setQuickFilter] = useState('');
+  const [groupByDept, setGroupByDept] = useState(false);
   const apiRef = useRef<GridApi<EmployeeRow> | null>(null);
 
   const handleGridReady = (api: GridApi<EmployeeRow>) => {
@@ -101,12 +102,21 @@ export default function App() {
     apiRef.current?.setQuickFilter(text);
   };
 
+  const handleToggleGrouping = () => {
+    const next = !groupByDept;
+    setGroupByDept(next);
+    apiRef.current?.setGroupColumns(next ? ['department'] : []);
+  };
+
   const gridOptions: GridOptions<EmployeeRow> = {
     columnDefs: columns,
     rowData: ALL_DATA.slice(0, rowCount),
     rowHeight: 40,
     headerHeight: 40,
     selection: 'multiple',
+    // Group summary footers + a grand-total footer (visible once grouped).
+    groupIncludeFooter: true,
+    groupIncludeTotalFooter: true,
     onGridReady: (e) => handleGridReady(e.api),
     // Variable row height: every 3rd row is taller
     getRowHeight: variableHeight
@@ -148,6 +158,9 @@ export default function App() {
         </button>
         <button onClick={() => setVariableHeight(!variableHeight)}>
           {variableHeight ? 'Fixed' : 'Variable'} Row Height
+        </button>
+        <button onClick={handleToggleGrouping}>
+          {groupByDept ? 'Ungroup' : 'Group by Department'}
         </button>
         <button onClick={handleExportCsv}>Export CSV</button>
         <button onClick={handleSizeToFit}>Size Columns to Fit</button>
@@ -256,6 +269,8 @@ export default function App() {
         }
         .og-cell:last-child { border-right: none; }
         .og-group-row { background: #f0f4ff; font-weight: 600; }
+        .og-group-footer-row { background: #e8eeff; font-weight: 600; font-style: italic; border-top: 1px solid #d4dcf0; }
+        .og-group-count { font-weight: 400; opacity: 0.65; }
         .og-group-cell { flex: 1; gap: 8px; display: flex; align-items: center; padding: 0 8px; }
         .og-group-toggle {
           background: none; border: none; cursor: pointer; font-size: 12px;

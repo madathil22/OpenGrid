@@ -15,6 +15,11 @@ export interface GridRowProps<TData = RowData> {
   columnWidths?: Map<string, number>;
   /** Toggle this row's selection from a checkbox cell (shiftKey → range). */
   onCheckboxChange?: (node: RowNode<TData>, shiftKey: boolean) => void;
+  /** Which pane this row is rendered in. Group/footer content renders only in
+   * the center pane; pinned panes get a spacer to keep rows aligned. */
+  pane?: 'left' | 'center' | 'right';
+  /** All visible columns (for formatting group aggregates). */
+  allColumns?: ColumnDef<TData>[];
 }
 
 export function GridRow<TData = RowData>({
@@ -27,6 +32,8 @@ export function GridRow<TData = RowData>({
   onGroupToggle,
   columnWidths,
   onCheckboxChange,
+  pane = 'center',
+  allColumns,
 }: GridRowProps<TData>) {
   const style: React.CSSProperties = {
     position: 'absolute',
@@ -39,7 +46,15 @@ export function GridRow<TData = RowData>({
   };
 
   if (node.isGroup) {
-    return <GroupRow node={node} style={style} onToggle={onGroupToggle} />;
+    // Render the label + aggregates once (center pane); spacers elsewhere so the
+    // pinned panes stay vertically aligned with the group/footer row.
+    if (pane !== 'center') {
+      const cls = node.isFooter ? 'og-row og-group-footer-row' : 'og-row og-group-row';
+      return <div className={cls} style={style} role="row" aria-hidden />;
+    }
+    return (
+      <GroupRow node={node} style={style} onToggle={onGroupToggle} columns={allColumns ?? columns} />
+    );
   }
 
   return (

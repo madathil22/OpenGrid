@@ -175,7 +175,7 @@ export function OpenGrid<TData = RowData>({
   );
 
   /** Render a pane of rows for a given column set */
-  const renderRows = (cols: ColumnDef<TData>[]) =>
+  const renderRows = (cols: ColumnDef<TData>[], pane: 'left' | 'center' | 'right') =>
     visibleSlice.map((node, i) => {
       const absoluteIndex = startIndex + i;
       const rowOffsetY = getRowOffsetY(absoluteIndex) - getRowOffsetY(startIndex) + offsetY;
@@ -192,6 +192,8 @@ export function OpenGrid<TData = RowData>({
           onGroupToggle={handleGroupToggle}
           columnWidths={columnWidths}
           onCheckboxChange={handleCheckboxChange}
+          pane={pane}
+          allColumns={columnDefs}
         />
       );
     });
@@ -265,7 +267,7 @@ export function OpenGrid<TData = RowData>({
                 transform: `translateY(-${scrollTop}px)`,
               }}
             >
-              {renderRows(pinnedLeft)}
+              {renderRows(pinnedLeft, 'left')}
             </div>
           </div>
         )}
@@ -279,7 +281,7 @@ export function OpenGrid<TData = RowData>({
           role="rowgroup"
         >
           <div style={{ height: totalHeight, width: centerTotalWidth, position: 'relative' }}>
-            {renderRows(centerCols)}
+            {renderRows(centerCols, 'center')}
           </div>
         </div>
 
@@ -303,7 +305,7 @@ export function OpenGrid<TData = RowData>({
                 transform: `translateY(-${scrollTop}px)`,
               }}
             >
-              {renderRows(pinnedRight)}
+              {renderRows(pinnedRight, 'right')}
             </div>
           </div>
         )}

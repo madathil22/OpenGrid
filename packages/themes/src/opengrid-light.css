@@ -328,3 +328,18 @@
   color: #5f6368;
   margin-left: 8px;
 }
+
+.og-group-count {
+  font-weight: 400;
+  opacity: 0.65;
+}
+
+/* Group footer + grand-total rows */
+.og-group-footer-row {
+  background: var(--og-group-bg);
+  color: var(--og-group-text);
+  font-weight: 600;
+  font-style: italic;
+  cursor: default;
+  border-top: 1px solid var(--og-border-color);
+}

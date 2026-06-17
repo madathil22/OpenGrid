@@ -12,6 +12,10 @@ export type {
   SelectionChangedEvent,
   RowNode,
   AggFunction,
+  AggFuncCustom,
+  ColumnAggFunc,
+  FilterOperator,
+  CustomFilterParams,
   CellRendererParams,
   ValueGetterParams,
   ValueFormatterParams,
@@ -29,7 +33,8 @@ export { SelectionModel } from './models/SelectionModel.js';
 export { RenderEngine, RowHeightCache } from './engines/RenderEngine.js';
 export type { RowWindowParams, RowWindowResult, ColumnWindowParams, ColumnWindowResult } from './engines/RenderEngine.js';
 export { GroupingEngine } from './engines/GroupingEngine.js';
-export { aggregations, aggregate } from './engines/AggregationEngine.js';
+export type { FlattenOptions } from './engines/GroupingEngine.js';
+export { aggregations, aggregate, aggregateWith } from './engines/AggregationEngine.js';
 export type { AggFunctionName } from './engines/AggregationEngine.js';
 export { ExportEngine } from './engines/ExportEngine.js';
 
