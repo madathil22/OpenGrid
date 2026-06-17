@@ -221,7 +221,7 @@ export function OpenGrid<TData = RowData>({
               indeterminate={indeterminate}
               onToggleAll={handleToggleAll}
             />
-            {showFilterRow && <FilterRow columns={pinnedLeft} api={api} />}
+            {showFilterRow && <FilterRow columns={pinnedLeft} api={api} columnWidths={columnWidths} />}
           </div>
         )}
 
@@ -229,7 +229,7 @@ export function OpenGrid<TData = RowData>({
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           <div style={{ transform: `translateX(-${scrollLeft}px)`, width: centerTotalWidth, minWidth: '100%' }}>
             <GridHeader columns={centerCols} sortModel={sortModel} api={api} columnWidths={columnWidths} />
-            {showFilterRow && <FilterRow columns={centerCols} api={api} />}
+            {showFilterRow && <FilterRow columns={centerCols} api={api} columnWidths={columnWidths} />}
           </div>
         </div>
 
@@ -240,7 +240,7 @@ export function OpenGrid<TData = RowData>({
             style={{ width: pinnedRightWidth, flexShrink: 0, overflow: 'hidden', zIndex: 2 }}
           >
             <GridHeader columns={pinnedRight} sortModel={sortModel} api={api} columnWidths={columnWidths} />
-            {showFilterRow && <FilterRow columns={pinnedRight} api={api} />}
+            {showFilterRow && <FilterRow columns={pinnedRight} api={api} columnWidths={columnWidths} />}
           </div>
         )}
       </div>

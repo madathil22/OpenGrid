@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { render, fireEvent, within } from '@testing-library/react';
+import { render, fireEvent, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { OpenGrid } from '../components/OpenGrid.js';
-import type { ColumnDef } from '@opengrid/core';
+import type { ColumnDef, GridApi } from '@opengrid/core';
 
 type Row = { id: number; name: string; city: string };
 
@@ -82,5 +82,39 @@ describe('OpenGrid column behaviors', () => {
     // Width should reflect the drag delta (150 + 60 = 210px).
     expect(after).toBe('210px');
     expect(before).not.toBe(210);
+  });
+
+  it('keeps filter-row cells aligned with header cells after a resize', () => {
+    let api!: GridApi<Row>;
+    const { container } = render(
+      <OpenGrid
+        columnDefs={columns}
+        rowData={rows}
+        showFilterRow
+        height={300}
+        rowHeight={40}
+        onGridReady={(e) => {
+          api = e.api;
+        }}
+      />,
+    );
+
+    const widthForName = (selector: string): string | undefined => {
+      // Match the "Name" column by its index among the header cells.
+      const headers = [...container.querySelectorAll('.og-header .og-header-cell')];
+      const idx = headers.findIndex((h) => h.textContent?.includes('Name'));
+      const cells = [...container.querySelectorAll(selector)];
+      return (cells[idx] as HTMLElement | undefined)?.style.width;
+    };
+
+    // Regression: sizeColumnsToFit (or any resize) must update the filter row too.
+    act(() => {
+      api.resizeColumn('name', 250);
+    });
+
+    const headerWidth = widthForName('.og-header .og-header-cell');
+    const filterWidth = widthForName('.og-filter-row .og-filter-cell');
+    expect(headerWidth).toBe('250px');
+    expect(filterWidth).toBe(headerWidth);
   });
 });

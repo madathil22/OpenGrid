@@ -4,9 +4,11 @@ import type { ColumnDef, RowData, GridController } from '@opengrid/core';
 export interface FilterRowProps<TData = RowData> {
   columns: ColumnDef<TData>[];
   api: GridController<TData>;
+  /** Effective column widths (must match the header so cells stay aligned). */
+  columnWidths?: Map<string, number>;
 }
 
-export function FilterRow<TData = RowData>({ columns, api }: FilterRowProps<TData>) {
+export function FilterRow<TData = RowData>({ columns, api, columnWidths }: FilterRowProps<TData>) {
   const [values, setValues] = useState<Record<string, string>>({});
 
   const handleChange = (colId: string, value: string) => {
@@ -32,7 +34,7 @@ export function FilterRow<TData = RowData>({ columns, api }: FilterRowProps<TDat
         <div
           key={col.field}
           className="og-header-cell og-filter-cell"
-          style={{ width: col.width ?? 150 }}
+          style={{ width: columnWidths?.get(col.field) ?? col.width ?? 150 }}
         >
           {col.filterable ? (
             <input
